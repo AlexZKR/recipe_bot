@@ -1,0 +1,5 @@
+python-telegram-bot
+pydantic
+pydantic-settings
+
+-r requirements-dev.txt
