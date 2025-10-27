@@ -1,0 +1,63 @@
+services:
+  recipe_bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./recipebot:/app/recipebot
+    command: python -m recipebot.main
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    networks:
+      - recipe_default
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - pg_recipe_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost -p 5432 || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - recipe_default
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4_container
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_recipe_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - recipe_default
+
+networks:
+  recipe_default:
+
+volumes:
+  pg_recipe_data:
+  pgadmin_recipe_data:
