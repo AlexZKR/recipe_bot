@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from logging import getLogger
 
 import asyncpg
+from asyncpg.pool import PoolConnectionProxy
 
 from recipebot.adapters.repositories.sql.base.queries import (
     CREATE_GROUPS_TABLE,
@@ -37,7 +38,7 @@ class AsyncpgConnection:
             self._pool = None
 
     @asynccontextmanager
-    async def connection(self) -> AsyncIterator[asyncpg.Connection]:
+    async def connection(self) -> AsyncIterator[PoolConnectionProxy]:
         """
         Async context manager for getting a connection from the pool.
         """
@@ -50,7 +51,7 @@ class AsyncpgConnection:
             await self._pool.release(conn)
 
     @asynccontextmanager
-    async def get_cursor(self) -> AsyncIterator[asyncpg.Connection]:
+    async def get_cursor(self) -> AsyncIterator[PoolConnectionProxy]:
         """
         Async context manager similar to psycopg2 RealDictCursor usage.
         Yields a connection where you can execute queries without automatic transaction management.

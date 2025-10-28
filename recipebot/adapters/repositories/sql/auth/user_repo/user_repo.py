@@ -3,7 +3,7 @@ from logging import getLogger
 from telegram import User as TGUser
 
 from recipebot.adapters.repositories.sql.auth.exceptions import UserAlreadyExists
-from recipebot.adapters.repositories.sql.auth.queries import (
+from recipebot.adapters.repositories.sql.auth.user_repo.queries import (
     GET_BY_TG_ID_QUERY,
     INSERT_USER_QUERY,
 )

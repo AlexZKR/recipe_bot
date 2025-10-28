@@ -4,7 +4,9 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from telegram.ext._application import Application
 
-from recipebot.adapters.repositories.sql.auth.user_repo import UserAsyncpgRepo
+from recipebot.adapters.repositories.sql.auth.user_repo.user_repo import (
+    UserAsyncpgRepo,
+)
 from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import AsyncpgConnection
 from recipebot.config import settings
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
