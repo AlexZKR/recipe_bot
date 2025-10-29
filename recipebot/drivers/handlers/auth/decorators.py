@@ -15,20 +15,19 @@ def only_registered(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             user_repo = get_state(context)["user_repo"]
-            await user_repo.get_by_tg_user(update.effective_user)
+            user = await user_repo.get_by_tg_user(update.effective_user)
+            if not user:
+                raise UserNotFound
+            return await func(update, context)
         except UserNotFound:
             if update.effective_chat:
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text="User must be registered in the bot to perform this action.",
                 )
-            logger.exception(
-                "User must be registered in the bot to perform this action"
-            )
+            logger.error("User must be registered in the bot to perform this action")
         except Exception as exc:
             logger.error(exc)
             raise RuntimeError("System error")
-
-        return await func(update, context)
 
     return wrapper
