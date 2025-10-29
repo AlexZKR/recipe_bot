@@ -24,7 +24,7 @@ log_cli = true
 log_cli_level = "DEBUG"
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
-pythonpath = "recipebot"
+pythonpath = "recipebot/tests"
 
 [tool.coverage.run]
 concurrency = ["thread"]
