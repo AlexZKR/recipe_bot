@@ -14,9 +14,9 @@ services:
     networks:
       - recipe_default
     depends_on:
-      - postgres
+      - postgres_recipe
 
-  postgres:
+  postgres_recipe:
     image: postgres:17.6
     ports:
       - "5432:5432"
@@ -24,6 +24,7 @@ services:
       - POSTGRES_PASSWORD=pass
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
+
     volumes:
       - pg_recipe_data:/var/lib/postgresql
     healthcheck:
@@ -39,9 +40,8 @@ services:
     networks:
       - recipe_default
 
-  pgadmin:
+  pgadmin_recipe:
     image: dpage/pgadmin4:latest
-    container_name: pgadmin4_container
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@example.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -51,7 +51,7 @@ services:
     volumes:
       - pgadmin_recipe_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      - postgres_recipe
     networks:
       - recipe_default
 
