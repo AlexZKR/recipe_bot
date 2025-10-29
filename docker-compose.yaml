@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./recipebot:/app/recipebot
-    command: python -m recipebot.main
+    command: python -m recipebot.drivers.main
     env_file:
       - path: .env.example
         required: true

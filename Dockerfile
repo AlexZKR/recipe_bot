@@ -12,4 +12,4 @@ RUN pip install --upgrade pip -r requirements.txt
 
 COPY ./recipebot ./recipebot
 
-CMD ["python", "-m", "recipebot.main"]
+CMD ["python", "-m", "recipebot.drivers.main"]
