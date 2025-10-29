@@ -2,7 +2,10 @@ from logging import getLogger
 
 from telegram import User as TGUser
 
-from recipebot.adapters.repositories.sql.auth.exceptions import UserAlreadyExists
+from recipebot.adapters.repositories.sql.auth.exceptions import (
+    UserAlreadyExists,
+    UserNotFound,
+)
 from recipebot.adapters.repositories.sql.auth.user_repo.queries import (
     GET_BY_TG_ID_QUERY,
     INSERT_USER_QUERY,
@@ -49,3 +52,8 @@ class UserAsyncpgRepo(UserRepositoryABC):
             if not row:
                 return None
             return User(**dict(row))
+
+    async def get_by_tg_user(self, user: TGUser | None) -> User | None:
+        if not user:
+            raise UserNotFound("TG user wasn't provided")
+        return await self.get_by_tg_id(user.id)
