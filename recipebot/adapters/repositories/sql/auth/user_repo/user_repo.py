@@ -27,7 +27,7 @@ class UserAsyncpgRepo(UserRepositoryABC):
     async def add(self, register_data: TGUser) -> User:
         logger.info("Starting user registration")
         async with self.conn.get_cursor() as conn:
-            if await self.get_by_tg_id(register_data.id):
+            if await self.get(register_data.id):
                 raise UserAlreadyExists(
                     f"Username {register_data.username} already registered."
                 )
@@ -39,14 +39,9 @@ class UserAsyncpgRepo(UserRepositoryABC):
                 register_data.first_name,
                 register_data.last_name,
             )
-            if row is None:
-                raise RuntimeError("Insert failed, no row returned")
+            return User.model_validate(row)
 
-            logger.critical(row)
-
-            return User(**dict(row))
-
-    async def get_by_tg_id(self, id: int) -> User | None:
+    async def get(self, id: int) -> User | None:
         async with self.conn.get_cursor() as conn:
             row = await conn.fetchrow(load_query(__file__, GET_BY_TG_ID_QUERY), id)
             if not row:
@@ -56,4 +51,4 @@ class UserAsyncpgRepo(UserRepositoryABC):
     async def get_by_tg_user(self, user: TGUser | None) -> User | None:
         if not user:
             raise UserNotFound("TG user wasn't provided")
-        return await self.get_by_tg_id(user.id)
+        return await self.get(user.id)
