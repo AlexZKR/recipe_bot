@@ -14,7 +14,8 @@ services:
     networks:
       - recipe_default
     depends_on:
-      - postgres_recipe
+      postgres_recipe:
+        condition: service_healthy
 
   postgres_recipe:
     image: postgres:17.6
