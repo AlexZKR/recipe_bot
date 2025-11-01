@@ -12,13 +12,15 @@ class TelegramBotSettings(BaseSettings):
 
 
 class PostgreSQLSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="DB_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="db__", env_file=".env", extra="ignore"
+    )
 
-    HOST: str = "postgres"
-    PORT: int = 5432
-    USER: str = "postgres"
-    PASSWORD: SecretStr | None = SecretStr("pass")
-    NAME: str = "postgres"
+    host: str = "postgres"
+    port: int = 5432
+    user: str = "postgres"
+    password: SecretStr | None = SecretStr("pass")
+    name: str = "postgres"
 
     @property
     def dsn(self) -> str:
@@ -26,8 +28,8 @@ class PostgreSQLSettings(BaseSettings):
         Returns a PostgreSQL DSN string in the format:
         postgresql://user:password@host:port/dbname
         """
-        password_part = f":{self.PASSWORD.get_secret_value()}" if self.PASSWORD else ""
-        return f"postgresql://{self.USER}{password_part}@{self.HOST}:{self.PORT}/{self.NAME}"
+        password_part = f":{self.password.get_secret_value()}" if self.password else ""
+        return f"postgresql://{self.user}{password_part}@{self.host}:{self.port}/{self.name}"
 
 
 class Settings(BaseSettings):
