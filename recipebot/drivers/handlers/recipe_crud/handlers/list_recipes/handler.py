@@ -103,7 +103,7 @@ async def handle_recipe_selection(update: Update, context: ContextTypes.DEFAULT_
     # Format recipe details
     recipe_text = recipe.to_md()
 
-    await query.edit_message_text(recipe_text, parse_mode="Markdown")
+    await query.edit_message_text(recipe_text)
 
     await context.bot.send_message(
         chat_id=query.message.chat.id,

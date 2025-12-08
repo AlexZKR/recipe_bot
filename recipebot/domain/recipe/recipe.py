@@ -15,7 +15,7 @@ class RecipeCategory(StrEnum):
 class RecipeTag(BaseModel):
     id: int
     name: str
-    group_id: int
+    group_id: int | None = None
     user_id: int
 
 
@@ -32,30 +32,32 @@ class Recipe(BaseModel):
     link: AnyHttpUrl | None = None
 
     user_id: int
-    tags: list[int] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
     def to_md(self) -> str:
-        """Format recipe as markdown text for display."""
-        recipe_text = f"""
-🍽️ **{self.title}**
+        """Format recipe as plain text for display."""
+        recipe_text = f"""🍽️ {self.title}
 
-📝 **Description:** {self.description or "No description"}
+📝 Description: {self.description or "No description"}
 
-🍳 **Ingredients:**
+🍳 Ingredients:
 {self.ingredients}
 
-👨‍🍳 **Steps:**
+👨‍🍳 Steps:
 {self.steps}
 
-📊 **Category:** {self.category.value}
-🍽️ **Servings:** {self.servings or "Not specified"}
-⏱️ **Estimated time:** {self.estimated_time or "Not specified"}
-"""
+📊 Category: {self.category.value}
+🍽️ Servings: {self.servings or "Not specified"}
+⏱️ Estimated time: {self.estimated_time or "Not specified"}"""
 
         if self.notes:
-            recipe_text += f"\n📌 **Notes:** {self.notes}"
+            recipe_text += f"\n📌 Notes: {self.notes}"
 
         if self.link:
-            recipe_text += f"\n🔗 **Link:** {self.link}"
+            recipe_text += f"\n🔗 Link: {str(self.link)}"
+
+        if self.tags:
+            tags_str = " ".join(f"#{tag}" for tag in self.tags)
+            recipe_text += f"\n🏷️ Tags: {tags_str}"
 
         return recipe_text

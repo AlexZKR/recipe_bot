@@ -124,7 +124,6 @@ async def handle_recipe_selection_for_delete(
         f"**{recipe.title}**\n\n"
         f"⚠️ This action cannot be undone!",
         reply_markup=reply_markup,
-        parse_mode="Markdown",
     )
 
 
@@ -181,7 +180,6 @@ async def handle_delete_confirmation(
     await query.edit_message_text(
         f"✅ Recipe **{recipe.title}** has been deleted successfully!",
         reply_markup=None,
-        parse_mode="Markdown",
     )
 
     # Send the main keyboard

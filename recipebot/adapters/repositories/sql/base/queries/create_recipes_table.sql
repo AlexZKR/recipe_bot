@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     servings INTEGER,
     notes TEXT,
     link TEXT,
+    tags INTEGER[] DEFAULT '{}',
 
     user_id BIGINT REFERENCES users (tg_id)
 );

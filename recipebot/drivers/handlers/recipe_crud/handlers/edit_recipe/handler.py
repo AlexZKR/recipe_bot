@@ -127,7 +127,6 @@ async def handle_recipe_selection_for_edit(
     await query.edit_message_text(
         f"Editing recipe: **{recipe.title}**\n\nWhat would you like to change?",
         reply_markup=reply_markup,
-        parse_mode="Markdown",
     )
 
 
@@ -165,7 +164,6 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
         await query.edit_message_text(
             f"Editing recipe: **{recipe.title}**\n\nSelect the new category:",
             reply_markup=reply_markup,
-            parse_mode="Markdown",
         )
         # Don't start conversation for category - handle via callback
         return
@@ -252,7 +250,6 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     await query.edit_message_text(
         f"✅ Category updated to **{category.value}** successfully!",
         reply_markup=None,
-        parse_mode="Markdown",
     )
 
     # Send the main keyboard

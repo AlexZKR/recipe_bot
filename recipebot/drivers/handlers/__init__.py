@@ -6,6 +6,7 @@ from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe import (
     add_recipe_handler,
+    global_tag_callback_handler,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe import (
     delete_confirmation_handler,
@@ -23,6 +24,11 @@ from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
     list_recipes_handler,
     pagination_handler,
     recipe_selection_handler,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
+    search_pagination_handler,
+    search_recipes_handler,
+    search_result_handler,
 )
 
 
@@ -47,9 +53,14 @@ def add_handlers(app: Application) -> None:
     app.add_handler(start_handler)
     app.add_handler(registered_handler)
     app.add_handler(add_recipe_handler)
+    app.add_handler(global_tag_callback_handler)
     app.add_handler(list_recipes_handler)
     app.add_handler(recipe_selection_handler)
     app.add_handler(pagination_handler)
+    app.add_handler(search_recipes_handler)
+    app.add_handler(search_result_handler)
+    app.add_handler(search_pagination_handler)
+    app.add_handler(search_recipes_handler)
     app.add_handler(update_recipe_handler)
     app.add_handler(edit_recipe_selection_handler)
     app.add_handler(edit_field_conversation)

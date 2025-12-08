@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import (
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     ConversationHandler,
@@ -14,14 +15,60 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
     CATEGORY,
     INGREDIENTS,
     STEPS,
+    TAGS,
     TITLE,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers import (
+    add_tag_to_recipe,
+    finalize_recipe,
     handle_cancel,
     handle_category,
     handle_ingredients,
     handle_steps,
+    handle_tags,
     handle_title,
+    show_tags_keyboard,
+)
+
+
+# Global callback handler for tag operations during recipe creation
+async def global_handle_tag_callbacks(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+    """Global handler for tag-related callback queries during recipe creation."""
+    query = update.callback_query
+    if not query or not query.data:
+        return
+
+    # Only handle tag-related callbacks
+    callback_data = query.data
+    if not (
+        callback_data.startswith("tag_") or callback_data in ["new_tag", "tags_done"]
+    ):
+        return  # Not a tag callback, ignore
+
+    # Only handle if we're in recipe creation context
+    if not context.user_data or "title" not in context.user_data:
+        return
+
+    await query.answer()
+
+    if callback_data == "new_tag":
+        await query.edit_message_text("Enter the name for your new tag:")
+    elif callback_data == "tags_done":
+        await finalize_recipe(update, context)
+    elif callback_data.startswith("tag_"):
+        tag_name = callback_data[4:]  # Remove "tag_" prefix
+        print(f"DEBUG: Global handler - Adding tag '{tag_name}'")  # Debug
+        try:
+            await add_tag_to_recipe(context, tag_name)
+            await show_tags_keyboard(update, context)
+        except Exception as e:
+            await query.edit_message_text(f"Error adding tag: {e}")
+
+
+global_tag_callback_handler = CallbackQueryHandler(
+    global_handle_tag_callbacks  # No pattern - catch all callbacks
 )
 
 
@@ -47,6 +94,9 @@ add_recipe_handler = ConversationHandler(
         ],
         STEPS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_steps)],
         CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_category)],
+        TAGS: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tags),
+        ],
     },
     fallbacks=[CommandHandler("cancel", handle_cancel)],
     persistent=True,

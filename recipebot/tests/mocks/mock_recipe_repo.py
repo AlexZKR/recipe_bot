@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from recipebot.domain.recipe.recipe import Recipe
+from recipebot.domain.recipe.recipe import Recipe, RecipeTag
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 
@@ -8,6 +8,8 @@ from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 class MockRecipeRepo(RecipeRepositoryABC):
     def __init__(self):
         self._recipes = []
+        self._tags = []
+        self._next_tag_id = 1
 
     async def add(self, recipe_data: Recipe) -> Recipe:
         """Add a recipe and return it (simulating database insertion)."""
@@ -46,6 +48,50 @@ class MockRecipeRepo(RecipeRepositoryABC):
                 self._recipes.pop(i)
                 return
         raise RecipeNotFound(f"Recipe with ID {id} not found or access denied")
+
+    async def get_user_tags(self, user_id: int) -> list[RecipeTag]:
+        """Get all tags created by a user."""
+        return [tag for tag in self._tags if tag.user_id == user_id]
+
+    async def create_tag(self, tag: RecipeTag) -> RecipeTag:
+        """Create a new tag."""
+        new_tag = RecipeTag(
+            id=self._next_tag_id,
+            name=tag.name,
+            group_id=tag.group_id,
+            user_id=tag.user_id,
+        )
+        self._tags.append(new_tag)
+        self._next_tag_id += 1
+        return new_tag
+
+    async def get_or_create_tag(self, name: str, user_id: int) -> RecipeTag:
+        """Get existing tag or create new one."""
+        # Try to find existing tag
+        for tag in self._tags:
+            if tag.name == name and tag.user_id == user_id:
+                return tag
+
+        # Create new tag
+        new_tag = RecipeTag(
+            id=0,  # Will be set by create_tag
+            name=name,
+            group_id=None,
+            user_id=user_id,
+        )
+        return await self.create_tag(new_tag)
+
+    async def search_by_tags(self, user_id: int, tag_names: list[str]) -> list[Recipe]:
+        """Search recipes by tags for a specific user."""
+        matching_recipes = []
+        for recipe in self._recipes:
+            if recipe.user_id == user_id:
+                # Check if recipe has any of the requested tags
+                recipe_tags = set(recipe.tags or [])
+                search_tags = set(tag_names)
+                if recipe_tags.intersection(search_tags):
+                    matching_recipes.append(recipe)
+        return matching_recipes
 
     def get_recipes(self) -> list[Recipe]:
         """Helper method to get all recipes for testing purposes."""

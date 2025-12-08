@@ -1,3 +1,8 @@
-SELECT id, title, ingredients, steps, category, description, estimated_time, servings, notes, link, user_id
-FROM recipes
-WHERE id = $1;
+SELECT r.id, r.title, r.ingredients, r.steps, r.category,
+       r.description, r.estimated_time, r.servings, r.notes, r.link, r.user_id,
+       ARRAY_AGG(rt.name) FILTER (WHERE rt.name IS NOT NULL) as tag_names
+FROM recipes r
+LEFT JOIN recipe_tag rt ON rt.id = ANY(r.tags)
+WHERE r.id = $1
+GROUP BY r.id, r.title, r.ingredients, r.steps, r.category,
+         r.description, r.estimated_time, r.servings, r.notes, r.link, r.user_id;
