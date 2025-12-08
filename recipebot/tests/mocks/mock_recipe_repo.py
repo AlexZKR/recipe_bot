@@ -37,7 +37,15 @@ class MockRecipeRepo(RecipeRepositoryABC):
             if recipe.id == recipe_data.id:
                 self._recipes[i] = recipe_data
                 return recipe_data
-        raise ValueError(f"Recipe with ID {recipe_data.id} not found")
+        raise RecipeNotFound(f"Recipe with ID {recipe_data.id} not found")
+
+    async def delete(self, id, user_id: int) -> None:
+        """Delete a recipe."""
+        for i, recipe in enumerate(self._recipes):
+            if recipe.id == id and recipe.user_id == user_id:
+                self._recipes.pop(i)
+                return
+        raise RecipeNotFound(f"Recipe with ID {id} not found or access denied")
 
     def get_recipes(self) -> list[Recipe]:
         """Helper method to get all recipes for testing purposes."""

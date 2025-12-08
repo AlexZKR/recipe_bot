@@ -20,3 +20,7 @@ class RecipeRepositoryABC(ABC):
     @abstractmethod
     async def update(self, recipe_data: Recipe) -> Recipe:
         pass
+
+    @abstractmethod
+    async def delete(self, id: UUID, user_id: int) -> None:
+        pass

@@ -4,6 +4,7 @@ from uuid import UUID
 from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import AsyncpgConnection
 from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.adapters.repositories.sql.recipe.queries import (
+    DELETE_RECIPE_QUERY,
     GET_RECIPE_BY_ID_QUERY,
     GET_RECIPES_BY_USER_QUERY,
     INSERT_RECIPE_QUERY,
@@ -83,3 +84,14 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
         if not row:
             raise RecipeNotFound(f"Recipe with ID {recipe_data.id} not found")
         return Recipe.model_validate(dict(row))
+
+    async def delete(self, id: UUID, user_id: int) -> None:
+        logger.info(f"Deleting recipe {id} for user {user_id}")
+        async with self.conn.get_cursor() as conn:
+            result = await conn.execute(
+                load_query(__file__, DELETE_RECIPE_QUERY),
+                id,
+                user_id,
+            )
+            if result == "DELETE 0":
+                raise RecipeNotFound(f"Recipe with ID {id} not found or access denied")

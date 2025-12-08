@@ -5,6 +5,11 @@ from recipebot.drivers.handlers.auth import registered_handler, start_handler
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe.add_recipe_handler import add_recipe_handler
+from recipebot.drivers.handlers.recipe.delete_recipe import (
+    delete_confirmation_handler,
+    delete_recipe_handler,
+    delete_recipe_selection_handler,
+)
 from recipebot.drivers.handlers.recipe.edit_recipe import (
     edit_field_conversation,
     edit_recipe_selection_handler,
@@ -42,4 +47,7 @@ def add_handlers(app: Application) -> None:
     app.add_handler(update_recipe_handler)
     app.add_handler(edit_recipe_selection_handler)
     app.add_handler(edit_field_conversation)
+    app.add_handler(delete_recipe_handler)
+    app.add_handler(delete_recipe_selection_handler)
+    app.add_handler(delete_confirmation_handler)
     app.add_handler(fallback_handler)
