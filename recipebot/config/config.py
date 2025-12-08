@@ -1,6 +1,8 @@
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from recipebot.config.enums import AppEnvironment
+
 
 class TelegramBotSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -8,7 +10,8 @@ class TelegramBotSettings(BaseSettings):
         env_file=".env",
         extra="ignore",
     )
-    token: SecretStr = SecretStr("token")
+    test_token: SecretStr = SecretStr("test_token")
+    prod_token: SecretStr = SecretStr("prod_token")
 
 
 class PostgreSQLSettings(BaseSettings):
@@ -32,6 +35,14 @@ class PostgreSQLSettings(BaseSettings):
         return f"postgresql://{self.user}{password_part}@{self.host}:{self.port}/{self.name}"
 
 
+class AppSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="app__", env_file=".env", extra="ignore"
+    )
+    env: AppEnvironment = AppEnvironment.DEV
+
+
 class Settings(BaseSettings):
     TELEGRAM_BOT_SETTINGS: TelegramBotSettings = TelegramBotSettings()
     POSTGRESQL: PostgreSQLSettings = PostgreSQLSettings()
+    APP: AppSettings = AppSettings()
