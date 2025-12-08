@@ -17,6 +17,8 @@ from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe import (
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe import (
     edit_category_selection_handler,
     edit_field_conversation,
+    edit_field_selection_handler,
+    edit_pagination_handler,
     edit_recipe_selection_handler,
     update_recipe_handler,
 )
@@ -53,20 +55,22 @@ def add_handlers(app: Application) -> None:
     app.add_handler(start_handler)
     app.add_handler(registered_handler)
     app.add_handler(add_recipe_handler)
-    app.add_handler(global_tag_callback_handler)
     app.add_handler(list_recipes_handler)
     app.add_handler(recipe_selection_handler)
+    app.add_handler(edit_recipe_selection_handler)
+    app.add_handler(edit_field_selection_handler)
+    app.add_handler(edit_pagination_handler)
+    app.add_handler(delete_recipe_selection_handler)
+    app.add_handler(global_tag_callback_handler)
     app.add_handler(pagination_handler)
     app.add_handler(search_recipes_handler)
     app.add_handler(search_result_handler)
     app.add_handler(search_pagination_handler)
     app.add_handler(search_recipes_handler)
     app.add_handler(update_recipe_handler)
-    app.add_handler(edit_recipe_selection_handler)
     app.add_handler(edit_field_conversation)
     app.add_handler(edit_category_selection_handler)
     app.add_handler(delete_recipe_handler)
-    app.add_handler(delete_recipe_selection_handler)
     app.add_handler(delete_confirmation_handler)
     app.add_handler(delete_pagination_handler)
     app.add_handler(fallback_handler)

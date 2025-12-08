@@ -45,7 +45,7 @@ async def global_handle_tag_callbacks(
     if not (
         callback_data.startswith("tag_") or callback_data in ["new_tag", "tags_done"]
     ):
-        return  # Not a tag callback, ignore
+        return  # Not a tag callback, let other handlers process it
 
     # Only handle if we're in recipe creation context
     if not context.user_data or "title" not in context.user_data:

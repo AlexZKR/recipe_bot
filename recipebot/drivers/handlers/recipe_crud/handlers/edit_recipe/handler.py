@@ -16,7 +16,6 @@ from recipebot.domain.recipe.recipe import RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
     EDIT_CATEGORY_MIN_PARTS,
-    EDIT_RECIPE_PREFIX,
     EDITING_DESCRIPTION,
     EDITING_INGREDIENTS,
     EDITING_LINK,
@@ -50,7 +49,9 @@ from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.utils import (
     start_field_editing,
 )
 from recipebot.drivers.handlers.recipe_crud.shared import (
-    create_recipe_selection_keyboard,
+    PaginatedResult,
+    create_paginated_keyboard,
+    parse_pagination_callback,
 )
 from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound
@@ -61,7 +62,17 @@ filterwarnings(
 
 
 async def update_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Start the recipe update process by showing recipe selection."""
+    """Start the recipe update process by showing paginated recipe selection."""
+    await _show_edit_recipe_list(update, context, page=1)
+
+
+async def _show_edit_recipe_list(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    page: int = 1,
+    edit_message: bool = False,
+):
+    """Show paginated recipe list for editing."""
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
@@ -69,27 +80,68 @@ async def update_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     recipes = await recipe_repo.list_by_user(update.effective_user.id)
 
     if not recipes:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="You don't have any recipes yet. Use /add to create your first recipe!",
+        message = (
+            "You don't have any recipes yet. Use /add to create your first recipe!"
         )
+        if edit_message and update.callback_query:
+            await update.callback_query.edit_message_text(message)
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=message,
+            )
         return
 
-    # Create inline keyboard with recipe names for editing
-    reply_markup = create_recipe_selection_keyboard(recipes, EDIT_RECIPE_PREFIX)
+    # Create paginated result
+    paginated_result = PaginatedResult(recipes, page, callback_prefix="edit_recipe_")
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Select a recipe to edit:",
-        reply_markup=reply_markup,
+    # Create paginated keyboard
+    def item_callback_factory(recipe, current_page):
+        return f"edit_recipe_{recipe.id}"
+
+    reply_markup = create_paginated_keyboard(
+        paginated_result, item_callback_factory, navigation_prefix="edit_page"
     )
 
-    # Also show the main keyboard below
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Or use the keyboard below:",
-        reply_markup=MAIN_KEYBOARD,
+    message_text = (
+        f"Select a recipe to edit:\n\n{paginated_result.get_page_info_text()}"
     )
+
+    if edit_message and update.callback_query:
+        await update.callback_query.edit_message_text(
+            message_text,
+            reply_markup=reply_markup,
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=message_text,
+            reply_markup=reply_markup,
+        )
+
+        # Also show the main keyboard below
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Or use the keyboard below:",
+            reply_markup=MAIN_KEYBOARD,
+        )
+
+
+async def handle_edit_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle pagination navigation for edit recipe list."""
+    query = update.callback_query
+    if not query or not query.data:
+        return
+
+    await query.answer()
+
+    # Parse pagination callback
+    page = parse_pagination_callback(query.data, "edit_page")
+    if page is None:
+        return
+
+    # Show the requested page
+    await _show_edit_recipe_list(update, context, page=page, edit_message=True)
 
 
 async def handle_recipe_selection_for_edit(
@@ -197,6 +249,9 @@ edit_recipe_selection_handler = CallbackQueryHandler(
 )
 edit_field_selection_handler = CallbackQueryHandler(
     handle_field_selection, pattern=r"^edit_field_"
+)
+edit_pagination_handler = CallbackQueryHandler(
+    handle_edit_pagination, pattern=r"^edit_page_"
 )
 
 

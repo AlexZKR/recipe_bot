@@ -142,6 +142,11 @@ async def save_field_value(update: Update, context: ContextTypes.DEFAULT_TYPE, s
         await update.message.reply_text(f"Error updating recipe: {str(e)}")
         return ConversationHandler.END
 
+    # Display the updated recipe
+    await update.message.reply_text(
+        "✅ Recipe updated successfully!\n\n" + recipe.to_md()
+    )
+
     await update.message.reply_text(
         f"✅ {field_name.title()} updated successfully!", reply_markup=MAIN_KEYBOARD
     )

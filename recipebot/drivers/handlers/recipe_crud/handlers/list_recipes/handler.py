@@ -90,6 +90,7 @@ async def handle_recipe_selection(update: Update, context: ContextTypes.DEFAULT_
     # Extract recipe ID from callback data
     recipe_id = parse_recipe_callback(query.data)
     if not recipe_id:
+        await query.edit_message_text("Invalid recipe selection.")
         return
 
     # Get recipe details
