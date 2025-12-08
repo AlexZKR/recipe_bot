@@ -40,6 +40,7 @@ class AppSettings(BaseSettings):
         env_prefix="app__", env_file=".env", extra="ignore"
     )
     env: AppEnvironment = AppEnvironment.DEV
+    recipe_page_size: int = 5
 
 
 class Settings(BaseSettings):

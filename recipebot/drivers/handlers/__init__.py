@@ -9,6 +9,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe import (
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe import (
     delete_confirmation_handler,
+    delete_pagination_handler,
     delete_recipe_handler,
     delete_recipe_selection_handler,
 )
@@ -20,6 +21,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe import (
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
     list_recipes_handler,
+    pagination_handler,
     recipe_selection_handler,
 )
 
@@ -47,6 +49,7 @@ def add_handlers(app: Application) -> None:
     app.add_handler(add_recipe_handler)
     app.add_handler(list_recipes_handler)
     app.add_handler(recipe_selection_handler)
+    app.add_handler(pagination_handler)
     app.add_handler(update_recipe_handler)
     app.add_handler(edit_recipe_selection_handler)
     app.add_handler(edit_field_conversation)
@@ -54,4 +57,5 @@ def add_handlers(app: Application) -> None:
     app.add_handler(delete_recipe_handler)
     app.add_handler(delete_recipe_selection_handler)
     app.add_handler(delete_confirmation_handler)
+    app.add_handler(delete_pagination_handler)
     app.add_handler(fallback_handler)

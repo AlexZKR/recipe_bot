@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from uuid import UUID
 
 from telegram import Update
@@ -9,18 +10,31 @@ from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler_conte
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.layout import (
     create_delete_confirmation_keyboard,
-    create_recipe_selection_keyboard,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.utils import (
     parse_delete_confirm_callback,
     parse_delete_recipe_callback,
+)
+from recipebot.drivers.handlers.recipe_crud.shared import (
+    PaginatedResult,
+    create_paginated_keyboard,
+    parse_pagination_callback,
 )
 from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 
 
 async def delete_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Start the recipe deletion process by showing recipe selection."""
+    await _show_delete_recipe_list(update, context, page=1)
+
+
+async def _show_delete_recipe_list(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    page: int = 1,
+    edit_message: bool = False,
+):
+    """Show paginated recipe list for deletion."""
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
@@ -28,27 +42,50 @@ async def delete_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     recipes = await recipe_repo.list_by_user(update.effective_user.id)
 
     if not recipes:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="You don't have any recipes yet. Use /add to create your first recipe!",
-        )
+        if edit_message and update.callback_query:
+            await update.callback_query.edit_message_text(
+                "You don't have any recipes yet. Use /add to create your first recipe!"
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="You don't have any recipes yet. Use /add to create your first recipe!",
+            )
         return
 
-    # Create inline keyboard with recipe names for deletion
-    reply_markup = create_recipe_selection_keyboard(recipes, "delete_recipe_")
+    # Create paginated result
+    paginated_result = PaginatedResult(recipes, page, callback_prefix="delete_recipe_")
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Select a recipe to delete:",
-        reply_markup=reply_markup,
+    # Create paginated keyboard
+    def item_callback_factory(recipe, current_page):
+        return f"delete_recipe_{recipe.id}"
+
+    reply_markup = create_paginated_keyboard(
+        paginated_result, item_callback_factory, navigation_prefix="delete_page"
     )
 
-    # Also show the main keyboard below
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Or use the keyboard below:",
-        reply_markup=MAIN_KEYBOARD,
+    message_text = (
+        f"Select a recipe to delete:\n\n{paginated_result.get_page_info_text()}"
     )
+
+    if edit_message and update.callback_query:
+        await update.callback_query.edit_message_text(
+            message_text,
+            reply_markup=reply_markup,
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=message_text,
+            reply_markup=reply_markup,
+        )
+
+        # Also show the main keyboard below
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Or use the keyboard below:",
+            reply_markup=MAIN_KEYBOARD,
+        )
 
 
 async def handle_recipe_selection_for_delete(
@@ -178,18 +215,41 @@ async def _return_to_recipe_selection(query, context: ContextTypes.DEFAULT_TYPE)
         )
         return
 
-    # Show recipe selection again
-    reply_markup = create_recipe_selection_keyboard(recipes, "delete_recipe_")
-    await query.edit_message_text(
-        "Select a recipe to delete:",
-        reply_markup=reply_markup,
-    )
+    # Show paginated recipe selection by directly calling the pagination display
+    # Create a simple update-like object
+    mock_update = SimpleNamespace()
+    mock_update.callback_query = query
+    mock_update.effective_chat = query.message.chat if query.message else None
+    mock_update.effective_user = query.from_user
+
+    # Show paginated recipe selection
+    await _show_delete_recipe_list(mock_update, context, page=1, edit_message=True)  # type: ignore
+
+
+async def handle_delete_pagination(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle pagination navigation for delete operations."""
+    query = update.callback_query
+    if not query or not query.data:
+        return
+
+    await query.answer()
+
+    # Parse pagination callback
+    page = parse_pagination_callback(query.data, "delete_page")
+    if page is None:
+        return
+
+    # Show the requested page
+    await _show_delete_recipe_list(update, context, page=page, edit_message=True)
 
 
 # Handlers
 delete_recipe_handler = CommandHandler("delete_recipe", delete_recipe)
 delete_recipe_selection_handler = CallbackQueryHandler(
     handle_recipe_selection_for_delete, pattern=r"^delete_recipe_"
+)
+delete_pagination_handler = CallbackQueryHandler(
+    handle_delete_pagination, pattern=r"^delete_page_"
 )
 delete_confirmation_handler = CallbackQueryHandler(
     handle_delete_confirmation, pattern=r"^delete_confirm_"
