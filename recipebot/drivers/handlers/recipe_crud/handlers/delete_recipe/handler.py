@@ -80,13 +80,6 @@ async def _show_delete_recipe_list(
             reply_markup=reply_markup,
         )
 
-        # Also show the main keyboard below
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="Or use the keyboard below:",
-            reply_markup=MAIN_KEYBOARD,
-        )
-
 
 async def handle_recipe_selection_for_delete(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -179,6 +172,7 @@ async def handle_delete_confirmation(
 
     await query.edit_message_text(
         f"✅ Recipe **{recipe.title}** has been deleted successfully!",
+        parse_mode="Markdown",
         reply_markup=None,
     )
 
