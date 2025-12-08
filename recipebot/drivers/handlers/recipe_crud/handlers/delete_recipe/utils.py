@@ -1,6 +1,9 @@
-from recipebot.drivers.handlers.recipe.delete_recipe.constants import (
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.constants import (
     DELETE_FIELD_MIN_PARTS,
     DELETE_RECIPE_PREFIX,
+)
+from recipebot.drivers.handlers.recipe_crud.shared.callbacks import (
+    parse_prefixed_callback,
 )
 
 
@@ -13,18 +16,7 @@ def parse_delete_recipe_callback(callback_data: str | None) -> str | None:
     Returns:
         recipe_id string or None if invalid
     """
-    if not callback_data or not isinstance(callback_data, str):
-        return None
-
-    if not callback_data.startswith(DELETE_RECIPE_PREFIX):
-        return None
-
-    # Extract recipe ID: remove "delete_recipe_" prefix
-    recipe_id: str = callback_data[len(DELETE_RECIPE_PREFIX) :]
-    if not recipe_id:  # Ensure we have a non-empty recipe ID
-        return None
-
-    return recipe_id
+    return parse_prefixed_callback(callback_data, DELETE_RECIPE_PREFIX)
 
 
 def parse_delete_confirm_callback(callback_data: str | None) -> tuple[str, str] | None:

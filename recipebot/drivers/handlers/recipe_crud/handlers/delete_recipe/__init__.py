@@ -1,4 +1,4 @@
-from recipebot.drivers.handlers.recipe.delete_recipe.handler import (
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler import (
     delete_confirmation_handler,
     delete_recipe_handler,
     delete_recipe_selection_handler,

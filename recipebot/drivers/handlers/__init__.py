@@ -4,18 +4,21 @@ from telegram.ext._application import Application
 from recipebot.drivers.handlers.auth import registered_handler, start_handler
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
-from recipebot.drivers.handlers.recipe.add_recipe_handler import add_recipe_handler
-from recipebot.drivers.handlers.recipe.delete_recipe import (
+from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe import (
+    add_recipe_handler,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe import (
     delete_confirmation_handler,
     delete_recipe_handler,
     delete_recipe_selection_handler,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe import (
+    edit_category_selection_handler,
     edit_field_conversation,
     edit_recipe_selection_handler,
     update_recipe_handler,
 )
-from recipebot.drivers.handlers.recipe.list_recipes_handler import (
+from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
     list_recipes_handler,
     recipe_selection_handler,
 )
@@ -47,6 +50,7 @@ def add_handlers(app: Application) -> None:
     app.add_handler(update_recipe_handler)
     app.add_handler(edit_recipe_selection_handler)
     app.add_handler(edit_field_conversation)
+    app.add_handler(edit_category_selection_handler)
     app.add_handler(delete_recipe_handler)
     app.add_handler(delete_recipe_selection_handler)
     app.add_handler(delete_confirmation_handler)

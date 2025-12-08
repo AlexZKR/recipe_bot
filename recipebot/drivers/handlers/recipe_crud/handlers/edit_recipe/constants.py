@@ -13,11 +13,12 @@
 
 # Callback data parsing constants
 EDIT_FIELD_MIN_PARTS = 4
+EDIT_CATEGORY_MIN_PARTS = 2
 
 # Callback data prefixes
 EDIT_RECIPE_PREFIX = "edit_recipe_"
 
-# Field names
+# Editable fields
 EDITABLE_FIELDS = [
     "title",
     "ingredients",

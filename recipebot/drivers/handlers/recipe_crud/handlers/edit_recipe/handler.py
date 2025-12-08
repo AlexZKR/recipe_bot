@@ -12,10 +12,11 @@ from telegram.ext import (
 )
 from telegram.warnings import PTBUserWarning
 
+from recipebot.domain.recipe.recipe import RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
-from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
+    EDIT_CATEGORY_MIN_PARTS,
     EDIT_RECIPE_PREFIX,
-    EDITING_CATEGORY,
     EDITING_DESCRIPTION,
     EDITING_INGREDIENTS,
     EDITING_LINK,
@@ -25,8 +26,7 @@ from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
     EDITING_TIME,
     EDITING_TITLE,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.field_handlers import (
-    save_category,
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.field_handlers import (
     save_description,
     save_ingredients,
     save_link,
@@ -36,19 +36,20 @@ from recipebot.drivers.handlers.recipe.edit_recipe.field_handlers import (
     save_time,
     save_title,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.handler_context import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.handler_context import (
     EditRecipeContextKey,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.layout import (
-    create_field_edit_prompt,
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.layout import (
+    create_category_selection_keyboard,
     create_field_selection_keyboard,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.utils import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.utils import (
+    create_field_edit_prompt,
     parse_edit_field_callback,
     parse_edit_recipe_callback,
     start_field_editing,
 )
-from recipebot.drivers.handlers.recipe.list_recipes_handler import (
+from recipebot.drivers.handlers.recipe_crud.shared import (
     create_recipe_selection_keyboard,
 )
 from recipebot.drivers.state import get_state
@@ -130,7 +131,7 @@ async def handle_recipe_selection_for_edit(
     )
 
 
-async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):  # noqa: PLR0911
     """Handle field selection and start editing conversation."""
     query = update.callback_query
     if not query or not query.message or not query.message.chat:
@@ -158,7 +159,18 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
         await query.edit_message_text("Recipe not found in session. Please start over.")
         return
 
-    # Show current value and prompt for new value
+    # Special handling for category field - show category selection keyboard
+    if field_name == "category":
+        reply_markup = create_category_selection_keyboard(recipe_id)
+        await query.edit_message_text(
+            f"Editing recipe: **{recipe.title}**\n\nSelect the new category:",
+            reply_markup=reply_markup,
+            parse_mode="Markdown",
+        )
+        # Don't start conversation for category - handle via callback
+        return
+
+    # For other fields, show text prompt and start conversation
     prompt = create_field_edit_prompt(recipe, field_name)
 
     # Remove keyboard and show input prompt
@@ -189,6 +201,72 @@ edit_field_selection_handler = CallbackQueryHandler(
     handle_field_selection, pattern=r"^edit_field_"
 )
 
+
+async def handle_category_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle category selection for editing."""
+    query = update.callback_query
+    if not query or not query.message or not query.message.chat:
+        return
+
+    await query.answer()
+
+    # Parse callback data: edit_category_{recipe_id}_{category_value}
+    callback_data = query.data
+    if not callback_data or not callback_data.startswith("edit_category_"):
+        return
+
+    # Remove prefix and split the remaining parts
+    remaining = callback_data[len("edit_category_") :]
+    parts = remaining.split("_", 1)  # Split only on first underscore to handle UUIDs
+    if len(parts) != EDIT_CATEGORY_MIN_PARTS:
+        return
+
+    recipe_id = parts[0]
+    category_value = parts[1]
+
+    # Validate category
+    try:
+        category = RecipeCategory(category_value)
+    except ValueError:
+        await query.edit_message_text("Invalid category selected.")
+        return
+
+    # Get recipe and update category
+    recipe_repo = get_state(context)["recipe_repo"]
+    try:
+        recipe = await recipe_repo.get(UUID(recipe_id))
+    except RecipeNotFound:
+        await query.edit_message_text("Recipe not found.")
+        return
+
+    # Update the category
+    recipe.category = category
+
+    # Save back to database
+    try:
+        await recipe_repo.update(recipe)
+    except ValueError as e:
+        await query.edit_message_text(f"Error updating recipe: {str(e)}")
+        return
+
+    await query.edit_message_text(
+        f"✅ Category updated to **{category.value}** successfully!",
+        reply_markup=None,
+        parse_mode="Markdown",
+    )
+
+    # Send the main keyboard
+    await context.bot.send_message(
+        chat_id=query.message.chat.id,
+        text="What would you like to do next?",
+        reply_markup=MAIN_KEYBOARD,
+    )
+
+
+edit_category_selection_handler = CallbackQueryHandler(
+    handle_category_selection, pattern=r"^edit_category_"
+)
+
 # Conversation handler for field editing
 edit_field_conversation = ConversationHandler(
     entry_points=[edit_field_selection_handler],
@@ -198,9 +276,6 @@ edit_field_conversation = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, save_ingredients)
         ],
         EDITING_STEPS: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_steps)],
-        EDITING_CATEGORY: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, save_category)
-        ],
         EDITING_SERVINGS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, save_servings)
         ],

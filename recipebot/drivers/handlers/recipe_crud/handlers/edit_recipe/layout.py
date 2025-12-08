@@ -3,6 +3,29 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 
 
+def create_category_selection_keyboard(recipe_id: str) -> InlineKeyboardMarkup:
+    """Create inline keyboard for category selection (used in recipe editing).
+
+    Args:
+        recipe_id: The ID of the recipe being edited
+
+    Returns:
+        InlineKeyboardMarkup with category buttons
+    """
+    keyboard = []
+    for category in RecipeCategory:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    f"📊 {category.value}",
+                    callback_data=f"edit_category_{recipe_id}_{category.value}",
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(keyboard)
+
+
 def create_field_selection_keyboard(recipe: Recipe) -> InlineKeyboardMarkup:
     """Create inline keyboard for field selection during editing."""
     keyboard = [
@@ -50,24 +73,3 @@ def create_field_selection_keyboard(recipe: Recipe) -> InlineKeyboardMarkup:
     ]
 
     return InlineKeyboardMarkup(keyboard)
-
-
-def create_field_edit_prompt(recipe: Recipe, field_name: str) -> str:
-    """Create a prompt message for editing a specific field."""
-    current_value = getattr(recipe, field_name, "")
-    if current_value is None:
-        current_value = ""
-
-    field_prompts = {
-        "title": f"Current title: **{current_value}**\n\nEnter new title:",
-        "ingredients": f"Current ingredients:\n{current_value}\n\nEnter new ingredients:",
-        "steps": f"Current steps:\n{current_value}\n\nEnter new steps:",
-        "category": f"Current category: **{current_value}**\n\nChoose from: {', '.join([cat.value for cat in RecipeCategory])}",
-        "servings": f"Current servings: **{current_value or 'Not specified'}**\n\nEnter number of servings:",
-        "description": f"Current description: **{current_value or 'No description'}**\n\nEnter new description:",
-        "estimated_time": f"Current time: **{current_value or 'Not specified'}**\n\nEnter estimated time:",
-        "notes": f"Current notes: **{current_value or 'No notes'}**\n\nEnter new notes:",
-        "link": f"Current link: **{current_value or 'No link'}**\n\nEnter new link:",
-    }
-
-    return field_prompts.get(field_name, f"Enter new {field_name}:")

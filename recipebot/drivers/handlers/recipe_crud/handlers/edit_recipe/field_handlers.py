@@ -3,7 +3,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
     EDITING_CATEGORY,
     EDITING_DESCRIPTION,
     EDITING_INGREDIENTS,
@@ -14,7 +14,9 @@ from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
     EDITING_TIME,
     EDITING_TITLE,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.utils import save_field_value
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.utils import (
+    save_field_value,
+)
 
 
 async def save_title(update: Update, context: ContextTypes.DEFAULT_TYPE):

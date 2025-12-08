@@ -4,18 +4,16 @@ from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
-from recipebot.drivers.handlers.recipe.delete_recipe.handler_context import (
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler_context import (
     DeleteRecipeContextKey,
 )
-from recipebot.drivers.handlers.recipe.delete_recipe.layout import (
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.layout import (
     create_delete_confirmation_keyboard,
+    create_recipe_selection_keyboard,
 )
-from recipebot.drivers.handlers.recipe.delete_recipe.utils import (
+from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.utils import (
     parse_delete_confirm_callback,
     parse_delete_recipe_callback,
-)
-from recipebot.drivers.handlers.recipe.list_recipes_handler import (
-    create_recipe_selection_keyboard,
 )
 from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound

@@ -1,9 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from recipebot.domain.recipe.recipe import RecipeCategory
+from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
-from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
     EDIT_FIELD_MIN_PARTS,
     EDIT_RECIPE_PREFIX,
     EDITING_CATEGORY,
@@ -16,8 +16,11 @@ from recipebot.drivers.handlers.recipe.edit_recipe.constants import (
     EDITING_TIME,
     EDITING_TITLE,
 )
-from recipebot.drivers.handlers.recipe.edit_recipe.handler_context import (
+from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.handler_context import (
     EditRecipeContextKey,
+)
+from recipebot.drivers.handlers.recipe_crud.shared.callbacks import (
+    parse_prefixed_callback,
 )
 from recipebot.drivers.state import get_state
 
@@ -31,18 +34,7 @@ def parse_edit_recipe_callback(callback_data: str | None) -> str | None:
     Returns:
         recipe_id string or None if invalid
     """
-    if not callback_data or not isinstance(callback_data, str):
-        return None
-
-    if not callback_data.startswith(EDIT_RECIPE_PREFIX):
-        return None
-
-    # Extract recipe ID: remove "edit_recipe_" prefix
-    recipe_id: str = callback_data[len(EDIT_RECIPE_PREFIX) :]
-    if not recipe_id:  # Ensure we have a non-empty recipe ID
-        return None
-
-    return recipe_id
+    return parse_prefixed_callback(callback_data, EDIT_RECIPE_PREFIX)
 
 
 def parse_edit_field_callback(callback_data: str) -> tuple[str, str] | None:
@@ -159,3 +151,23 @@ async def save_field_value(update: Update, context: ContextTypes.DEFAULT_TYPE, s
         context.user_data.clear()
 
     return ConversationHandler.END
+
+
+def create_field_edit_prompt(recipe: Recipe, field_name: str) -> str:
+    """Create a prompt message for editing a specific field."""
+    current_value = getattr(recipe, field_name, "")
+    if current_value is None:
+        current_value = ""
+
+    field_prompts = {
+        "title": f"Current title: **{current_value}**\n\nEnter new title:",
+        "ingredients": f"Current ingredients:\n{current_value}\n\nEnter new ingredients:",
+        "steps": f"Current steps:\n{current_value}\n\nEnter new steps:",
+        "servings": f"Current servings: **{current_value or 'Not specified'}**\n\nEnter number of servings:",
+        "description": f"Current description: **{current_value or 'No description'}**\n\nEnter new description:",
+        "estimated_time": f"Current time: **{current_value or 'Not specified'}**\n\nEnter estimated time:",
+        "notes": f"Current notes: **{current_value or 'No notes'}**\n\nEnter new notes:",
+        "link": f"Current link: **{current_value or 'No link'}**\n\nEnter new link:",
+    }
+
+    return field_prompts.get(field_name, f"Enter new {field_name}:")

@@ -1,6 +1,12 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from recipebot.domain.recipe.recipe import Recipe
+from recipebot.drivers.handlers.recipe_crud.shared import (
+    create_recipe_selection_keyboard as create_recipe_selection_keyboard_shared,
+)
+
+# Backward compatibility alias
+create_recipe_selection_keyboard = create_recipe_selection_keyboard_shared
 
 
 def create_delete_confirmation_keyboard(recipe: Recipe) -> InlineKeyboardMarkup:
