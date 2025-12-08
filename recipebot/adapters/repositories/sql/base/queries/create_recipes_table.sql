@@ -1,6 +1,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE recipe_category AS ENUM ('BREAKFAST', 'LUNCH', 'DINNER', 'DESERT', 'COCKTAIL');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'recipe_category') THEN
+        CREATE TYPE recipe_category AS ENUM ('BREAKFAST', 'LUNCH', 'DINNER', 'DESERT', 'COCKTAIL');
+    END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS recipes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

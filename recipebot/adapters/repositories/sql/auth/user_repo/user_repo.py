@@ -39,7 +39,10 @@ class UserAsyncpgRepo(UserRepositoryABC):
                 register_data.first_name,
                 register_data.last_name,
             )
-            return User.model_validate(row)
+            if not row:
+                raise Exception("User not created")
+
+            return User.model_validate(dict(row))
 
     async def get(self, id: int) -> User | None:
         async with self.conn.get_cursor() as conn:
