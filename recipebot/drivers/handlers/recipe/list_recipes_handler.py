@@ -5,6 +5,32 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.state import get_state
+from recipebot.ports.repositories.exceptions import RecipeNotFound
+
+
+def create_recipe_selection_keyboard(
+    recipes, callback_prefix: str
+) -> InlineKeyboardMarkup:
+    """Create an inline keyboard with recipe names for selection.
+
+    Args:
+        recipes: List of Recipe objects
+        callback_prefix: Prefix for callback data (e.g., 'recipe_', 'edit_recipe_')
+
+    Returns:
+        InlineKeyboardMarkup with recipe buttons
+    """
+    keyboard = []
+    for recipe in recipes:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    recipe.title, callback_data=f"{callback_prefix}{recipe.id}"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(keyboard)
 
 
 async def list_recipes(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,13 +47,7 @@ async def list_recipes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Create inline keyboard with recipe names
-    keyboard = []
-    for recipe in recipes:
-        keyboard.append(
-            [InlineKeyboardButton(recipe.title, callback_data=f"recipe_{recipe.id}")]
-        )
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = create_recipe_selection_keyboard(recipes, "recipe_")
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -59,9 +79,9 @@ async def handle_recipe_selection(update: Update, context: ContextTypes.DEFAULT_
 
     # Get recipe details
     recipe_repo = get_state(context)["recipe_repo"]
-    recipe = await recipe_repo.get(UUID(recipe_id))
-
-    if not recipe:
+    try:
+        recipe = await recipe_repo.get(UUID(recipe_id))
+    except RecipeNotFound:
         await query.edit_message_text("Recipe not found.")
         return
 

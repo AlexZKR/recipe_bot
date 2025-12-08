@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from recipebot.domain.recipe.recipe import Recipe
+from recipebot.ports.repositories.exceptions import RecipeNotFound
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 
 
@@ -19,16 +20,24 @@ class MockRecipeRepo(RecipeRepositoryABC):
         self._recipes.append(recipe)
         return recipe
 
-    async def get(self, id: UUID) -> Recipe | None:
+    async def get(self, id: UUID) -> Recipe:
         """Get a recipe by ID."""
         for recipe in self._recipes:
             if recipe.id == id:
                 return recipe
-        return None
+        raise RecipeNotFound(f"Recipe with ID {id} not found")
 
     async def list_by_user(self, user_id: int) -> list[Recipe]:
         """List all recipes for a user."""
         return [recipe for recipe in self._recipes if recipe.user_id == user_id]
+
+    async def update(self, recipe_data: Recipe) -> Recipe:
+        """Update a recipe."""
+        for i, recipe in enumerate(self._recipes):
+            if recipe.id == recipe_data.id:
+                self._recipes[i] = recipe_data
+                return recipe_data
+        raise ValueError(f"Recipe with ID {recipe_data.id} not found")
 
     def get_recipes(self) -> list[Recipe]:
         """Helper method to get all recipes for testing purposes."""

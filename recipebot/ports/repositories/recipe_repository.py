@@ -10,9 +10,13 @@ class RecipeRepositoryABC(ABC):
         pass
 
     @abstractmethod
-    async def get(self, id: UUID) -> Recipe | None:
+    async def get(self, id: UUID) -> Recipe:
         pass
 
     @abstractmethod
     async def list_by_user(self, user_id: int) -> list[Recipe]:
+        pass
+
+    @abstractmethod
+    async def update(self, recipe_data: Recipe) -> Recipe:
         pass
