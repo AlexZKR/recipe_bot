@@ -7,14 +7,21 @@ from telegram.ext import (
     filters,
 )
 
-from recipebot.domain.recipe.recipe import RecipeCategory
+from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 from recipebot.drivers.handlers.auth.decorators import only_registered
+from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
+from recipebot.drivers.state import get_state
 
 ADD_START = "Let's add a recipe. I will ask for the required info. You can cancel at any time by typing /cancel."
 ADD_TITLE = "Provide a title for your recipe"
 ADD_INGREDIENTS = "Great! Now provide the ingredients."
 ADD_STEPS = "Awesome. Now, the steps to prepare it."
-ADD_CATEGORY = "What category does this recipe belong to?"
+ADD_CATEGORY = (
+    "What category does this recipe belong to (use keyboard for range of options)?"
+)
+ADD_CATEGORY_INVALID = (
+    "Please select a valid category from the keyboard options provided."
+)
 ADD_DONE = "All done! Your recipe has been saved."
 ADD_CANCEL = "Okay, I've cancelled the process. Your recipe has not been saved."
 
@@ -38,7 +45,7 @@ async def title(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not update.message:
         raise Exception("Something went wrong")
 
-    context.user_data["title"] = update.message.text
+    context.user_data["title"] = update.message.text  # type: ignore[index]
     await update.message.reply_text(ADD_INGREDIENTS)
 
     return INGREDIENTS
@@ -66,6 +73,7 @@ async def steps(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         ADD_CATEGORY,
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard,
+            selective=True,
             one_time_keyboard=True,
             input_field_placeholder="Recipe category",
         ),
@@ -76,23 +84,47 @@ async def steps(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Stores the category and ends the conversation."""
-    if not update.message or not context.user_data:
+    if not update.message or not context.user_data or not update.effective_user:
         raise Exception("Something went wrong")
 
-    context.user_data["category"] = update.message.text
+    user_input = update.message.text
+
+    # Validate that the input is a valid RecipeCategory
+    try:
+        recipe_category = RecipeCategory(user_input or "")
+    except ValueError:
+        # Invalid category, reprompt user
+        reply_keyboard = [[category.value for category in RecipeCategory]]
+        await update.message.reply_text(
+            ADD_CATEGORY_INVALID,
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard,
+                selective=True,
+                one_time_keyboard=True,
+                input_field_placeholder="Recipe category",
+            ),
+        )
+        return CATEGORY
+
+    # Valid category, proceed with saving
+    context.user_data["category"] = user_input
     await update.message.reply_text(ADD_DONE, reply_markup=ReplyKeyboardRemove())
 
-    # Here you would typically save the recipe to your database.
-    # For now, we'll just clear the user_data.
-    # from recipebot.domain.recipe.recipe import Recipe
-    # recipe = Recipe(
-    #     title=context.user_data["title"],
-    #     ingredients=context.user_data["ingredients"],
-    #     steps=context.user_data["steps"],
-    #     category=context.user_data["category"],
-    #     user_id=update.effective_user.id, # Assuming user_id is telegram id
-    # )
-    # print(recipe) # In a real app, you'd save this.
+    # Save the recipe to the database
+    recipe_repo = get_state(context)["recipe_repo"]
+    recipe = Recipe(
+        title=context.user_data["title"],
+        ingredients=context.user_data["ingredients"],
+        steps=context.user_data["steps"],
+        category=recipe_category,
+        user_id=update.effective_user.id,
+    )
+    await recipe_repo.add(recipe)
+
+    await update.message.reply_text(
+        "Recipe saved! What would you like to do next?",
+        reply_markup=MAIN_KEYBOARD,
+    )
 
     context.user_data.clear()
     return ConversationHandler.END

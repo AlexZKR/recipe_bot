@@ -1,5 +1,5 @@
 run_local:
-	python -m recipebot.main
+	python -m recipebot.drivers.main
 
 requirements:
 	python -m pip install --upgrade pip setuptools wheel && python -m pip install -r requirements.txt

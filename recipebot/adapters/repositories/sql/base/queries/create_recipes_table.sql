@@ -19,5 +19,5 @@ CREATE TABLE IF NOT EXISTS recipes (
     notes TEXT,
     link TEXT,
 
-    user_id INTEGER REFERENCES users (tg_id)
+    user_id BIGINT REFERENCES users (tg_id)
 );

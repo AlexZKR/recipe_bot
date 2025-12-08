@@ -12,9 +12,11 @@ def get_update(
     from_user: TGUser, text: str, bot: Bot, chat_type: ChatType = ChatType.PRIVATE
 ) -> Update:
     chat = Chat(id=1, type=chat_type)
-    entities = (
-        MessageEntity(type=MessageEntity.BOT_COMMAND, offset=0, length=len(text)),
-    )
+    entities: tuple[MessageEntity, ...] = ()
+    if text.startswith("/"):
+        entities = (
+            MessageEntity(type=MessageEntity.BOT_COMMAND, offset=0, length=len(text)),
+        )
     msg = Message(
         message_id=1,
         date=datetime.now(),

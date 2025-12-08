@@ -2,10 +2,6 @@ from logging import getLogger
 
 from telegram import User as TGUser
 
-from recipebot.adapters.repositories.sql.auth.exceptions import (
-    UserAlreadyExists,
-    UserNotFound,
-)
 from recipebot.adapters.repositories.sql.auth.user_repo.queries import (
     GET_BY_TG_ID_QUERY,
     INSERT_USER_QUERY,
@@ -15,6 +11,7 @@ from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import (
 )
 from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.domain.auth.user import User
+from recipebot.ports.repositories.exceptions import UserAlreadyExists, UserNotFound
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
 
 logger = getLogger(__name__)

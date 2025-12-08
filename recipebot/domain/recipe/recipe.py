@@ -1,15 +1,15 @@
-from enum import StrEnum, auto
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from pydantic import AnyHttpUrl, BaseModel, Field
 
 
 class RecipeCategory(StrEnum):
-    BREAKFAST = auto()
-    LUNCH = auto()
-    DINNER = auto()
-    DESERT = auto()
-    COCKTAIL = auto()
+    BREAKFAST = "BREAKFAST"
+    LUNCH = "LUNCH"
+    DINNER = "DINNER"
+    DESERT = "DESERT"
+    COCKTAIL = "COCKTAIL"
 
 
 class RecipeTag(BaseModel):
@@ -33,3 +33,29 @@ class Recipe(BaseModel):
 
     user_id: int
     tags: list[int] = Field(default_factory=list)
+
+    def to_md(self) -> str:
+        """Format recipe as markdown text for display."""
+        recipe_text = f"""
+🍽️ **{self.title}**
+
+📝 **Description:** {self.description or "No description"}
+
+🍳 **Ingredients:**
+{self.ingredients}
+
+👨‍🍳 **Steps:**
+{self.steps}
+
+📊 **Category:** {self.category.value}
+🍽️ **Servings:** {self.servings or "Not specified"}
+⏱️ **Estimated time:** {self.estimated_time or "Not specified"}
+"""
+
+        if self.notes:
+            recipe_text += f"\n📌 **Notes:** {self.notes}"
+
+        if self.link:
+            recipe_text += f"\n🔗 **Link:** {self.link}"
+
+        return recipe_text
