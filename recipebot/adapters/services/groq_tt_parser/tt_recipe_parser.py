@@ -2,9 +2,9 @@ from recipebot.adapters.services.groq_tt_parser.tt_recipe_prompt import (
     get_tt_recipe_prompt,
 )
 from recipebot.config import settings
+from recipebot.domain.recipe.recipe import RecipeDTO
 from recipebot.infra.groq.client import GroqClient
 from recipebot.ports.services.recipe_parser.recipe_parser import RecipeParserABC
-from recipebot.ports.services.recipe_parser.schemas import RecipeDTO
 
 
 class GroqTTRecipeParser(RecipeParserABC):

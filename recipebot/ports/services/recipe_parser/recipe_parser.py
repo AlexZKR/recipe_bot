@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from recipebot.ports.services.recipe_parser.schemas import RecipeDTO
+from recipebot.domain.recipe.recipe import RecipeDTO
 
 
 class RecipeParserABC(ABC):

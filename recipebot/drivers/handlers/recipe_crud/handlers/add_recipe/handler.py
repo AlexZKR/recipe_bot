@@ -29,6 +29,12 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers i
     handle_title,
     show_tags_keyboard,
 )
+from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.field_handlers import (
+    finalize_tiktok_recipe,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.handler_context import (
+    TikTokRecipeContextKey,
+)
 
 
 # Global callback handler for tag operations during recipe creation
@@ -47,8 +53,11 @@ async def global_handle_tag_callbacks(
     ):
         return  # Not a tag callback, let other handlers process it
 
-    # Only handle if we're in recipe creation context
-    if not context.user_data or "title" not in context.user_data:
+    # Only handle if we're in recipe creation context (regular or TikTok)
+    if not context.user_data or (
+        "title" not in context.user_data
+        and TikTokRecipeContextKey.PARSED_RECIPE not in context.user_data
+    ):
         return
 
     await query.answer()
@@ -56,7 +65,13 @@ async def global_handle_tag_callbacks(
     if callback_data == "new_tag":
         await query.edit_message_text("Enter the name for your new tag:")
     elif callback_data == "tags_done":
-        await finalize_recipe(update, context)
+        # Determine which finalization function to call based on context
+        if TikTokRecipeContextKey.PARSED_RECIPE in context.user_data:
+            # TikTok recipe creation
+            await finalize_tiktok_recipe(update, context)
+        else:
+            # Regular recipe creation
+            await finalize_recipe(update, context)
     elif callback_data.startswith("tag_"):
         tag_name = callback_data[4:]  # Remove "tag_" prefix
         print(f"DEBUG: Global handler - Adding tag '{tag_name}'")  # Debug

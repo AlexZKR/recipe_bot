@@ -22,6 +22,9 @@ from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe import (
     edit_recipe_selection_handler,
     update_recipe_handler,
 )
+from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok import (
+    from_tiktok_handler,
+)
 from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
     list_recipes_handler,
     pagination_handler,
@@ -57,6 +60,7 @@ def add_handlers(app: Application) -> None:
     app.add_handler(start_handler)
     app.add_handler(registered_handler)
     app.add_handler(add_recipe_handler)
+    app.add_handler(from_tiktok_handler)
     app.add_handler(list_recipes_handler)
     app.add_handler(recipe_selection_handler)
     app.add_handler(edit_recipe_selection_handler)

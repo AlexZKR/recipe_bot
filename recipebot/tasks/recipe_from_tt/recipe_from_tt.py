@@ -1,5 +1,5 @@
+from recipebot.domain.recipe.recipe import RecipeDTO
 from recipebot.ports.services.recipe_parser import RecipeParserABC
-from recipebot.ports.services.recipe_parser.schemas import RecipeDTO
 from recipebot.ports.services.tt_resolver.tt_resolver import TTResolverABC
 
 

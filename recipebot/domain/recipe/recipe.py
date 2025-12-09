@@ -36,12 +36,10 @@ class Ingredient(BaseModel):
         return " ".join(parts)
 
 
-class Recipe(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+class RecipeDTO(BaseModel):
     title: str
     ingredients: list[Ingredient]
     steps: list[str]
-    category: RecipeCategory
     servings: int | None = None
     desc: str | None = Field(
         None,
@@ -51,9 +49,6 @@ class Recipe(BaseModel):
     notes: str | None = None
     link: AnyHttpUrl | None = None
 
-    user_id: int
-    tags: list[str] = Field(default_factory=list)
-
     def to_md(self) -> str:
         """Format recipe as plain text for display."""
         recipe_text = f"""🍽️ {self.title}
@@ -61,12 +56,27 @@ class Recipe(BaseModel):
 📝 Description: {self.desc or "No description"}
 
 🍳 Ingredients:
-{self.ingredients}
+"""
 
+        # Format ingredients nicely
+        if self.ingredients:
+            for ingredient in self.ingredients:
+                recipe_text += f"• {ingredient.basic_info()}\n"
+        else:
+            recipe_text += "No ingredients specified\n"
+
+        recipe_text += """
 👨‍🍳 Steps:
-{self.steps}
+"""
 
-📊 Category: {self.category.value}
+        # Format steps as numbered list
+        if self.steps:
+            for i, step in enumerate(self.steps, 1):
+                recipe_text += f"{i}. {step}\n"
+        else:
+            recipe_text += "No steps specified\n"
+
+        recipe_text += f"""
 🍽️ Servings: {self.servings or "Not specified"}
 ⏱️ Estimated time: {self.estimated_time or "Not specified"}"""
 
@@ -76,6 +86,25 @@ class Recipe(BaseModel):
         if self.link:
             recipe_text += f"\n🔗 Link: {str(self.link)}"
 
+        return recipe_text
+
+
+class Recipe(RecipeDTO):
+    id: UUID = Field(default_factory=uuid4)
+    category: RecipeCategory
+
+    user_id: int
+    tags: list[str] = Field(default_factory=list)
+
+    def to_md(self) -> str:
+        """Format recipe as plain text for display."""
+        # Start with the basic recipe info from parent
+        recipe_text = super().to_md()
+
+        # Add category info
+        recipe_text += f"\n📊 Category: {self.category.value}"
+
+        # Add tags if present
         if self.tags:
             tags_str = " ".join(f"#{tag}" for tag in self.tags)
             recipe_text += f"\n🏷️ Tags: {tags_str}"

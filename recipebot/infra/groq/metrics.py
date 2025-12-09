@@ -48,6 +48,19 @@ class GroqUsageMetrics(BaseModel):
 def collect_metrics(response: ChatCompletion, model: str) -> GroqUsageMetrics:
     """Collect usage metrics from Groq API response."""
     usage = response.usage
+    if not usage:
+        logger.warning(f"No usage metrics found for model {model}")
+        return GroqUsageMetrics(
+            model=model,
+            total_tokens=0,
+            prompt_tokens=0,
+            completion_tokens=0,
+            cached_tokens=None,
+            completion_time=0,
+            queue_time=0,
+            prompt_time=0,
+            total_time=0,
+        )
 
     cached_tokens = None
     if usage.prompt_tokens_details and hasattr(
@@ -58,13 +71,13 @@ def collect_metrics(response: ChatCompletion, model: str) -> GroqUsageMetrics:
         )
 
     return GroqUsageMetrics(
-        total_tokens=usage.total_tokens,
-        prompt_tokens=usage.prompt_tokens,
-        completion_tokens=usage.completion_tokens,
+        total_tokens=usage.total_tokens if usage.total_tokens else 0,
+        prompt_tokens=usage.prompt_tokens if usage.prompt_tokens else 0,
+        completion_tokens=usage.completion_tokens if usage.completion_tokens else 0,
         cached_tokens=cached_tokens,
-        completion_time=usage.completion_time,
-        queue_time=usage.queue_time,
-        prompt_time=usage.prompt_time,
-        total_time=usage.total_time,
+        completion_time=usage.completion_time if usage.completion_time else 0,
+        queue_time=usage.queue_time if usage.queue_time else 0,
+        prompt_time=usage.prompt_time if usage.prompt_time else 0,
+        total_time=usage.total_time if usage.total_time else 0,
         model=model,
     )

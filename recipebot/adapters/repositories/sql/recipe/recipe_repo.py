@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 from uuid import UUID
 
@@ -40,8 +41,10 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
                 load_query(__file__, INSERT_RECIPE_QUERY),
                 recipe_data.id,
                 recipe_data.title,
-                recipe_data.ingredients,
-                recipe_data.steps,
+                json.dumps(
+                    [ingredient.model_dump() for ingredient in recipe_data.ingredients]
+                ),
+                json.dumps(recipe_data.steps),
                 recipe_data.category.value,
                 recipe_data.desc,
                 recipe_data.estimated_time,
@@ -76,6 +79,16 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
         else:
             row_dict["tags"] = []
 
+        # Convert ingredients JSONB back to list of Ingredient objects
+        if row_dict.get("ingredients"):
+            ingredients_data = json.loads(row_dict["ingredients"])
+            row_dict["ingredients"] = ingredients_data
+
+        # Convert steps JSONB back to list of strings
+        if row_dict.get("steps"):
+            steps_data = json.loads(row_dict["steps"])
+            row_dict["steps"] = steps_data
+
         return Recipe.model_validate(row_dict)
 
     async def list_by_user(self, user_id: int) -> list[Recipe]:
@@ -95,6 +108,17 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
                 ]
             else:
                 row_dict["tags"] = []
+
+            # Convert ingredients JSONB back to list of Ingredient objects
+            if row_dict.get("ingredients"):
+                ingredients_data = json.loads(row_dict["ingredients"])
+                row_dict["ingredients"] = ingredients_data
+
+            # Convert steps JSONB back to list of strings
+            if row_dict.get("steps"):
+                steps_data = json.loads(row_dict["steps"])
+                row_dict["steps"] = steps_data
+
             recipes.append(Recipe.model_validate(row_dict))
 
         return recipes
@@ -113,8 +137,10 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
             row = await conn.fetchrow(
                 load_query(__file__, UPDATE_RECIPE_QUERY),
                 recipe_data.title,
-                recipe_data.ingredients,
-                recipe_data.steps,
+                json.dumps(
+                    [ingredient.model_dump() for ingredient in recipe_data.ingredients]
+                ),
+                json.dumps(recipe_data.steps),
                 recipe_data.category.value,
                 recipe_data.servings,
                 recipe_data.desc,
@@ -221,6 +247,17 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
                 ]
             else:
                 row_dict["tags"] = []
+
+            # Convert ingredients JSONB back to list of Ingredient objects
+            if row_dict.get("ingredients"):
+                ingredients_data = json.loads(row_dict["ingredients"])
+                row_dict["ingredients"] = ingredients_data
+
+            # Convert steps JSONB back to list of strings
+            if row_dict.get("steps"):
+                steps_data = json.loads(row_dict["steps"])
+                row_dict["steps"] = steps_data
+
             recipes.append(Recipe.model_validate(row_dict))
 
         return recipes
