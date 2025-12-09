@@ -6,7 +6,7 @@ from typing import Any
 from httpx import AsyncClient, HTTPStatusError, Request, Response
 
 from recipebot.config.config import HTTPTransportSettings
-from recipebot.infra.transport.base import AbstractAsyncHTTPTransport
+from recipebot.infra.transport.base import AbstractAsyncHTTPTransport, ResponseMetadata
 from recipebot.infra.transport.exceptions import (
     ClientError,
     ConnectionTransportError,
@@ -32,9 +32,43 @@ class HttpxHTTPTransport(AbstractAsyncHTTPTransport):
         self.client = client
         self.settings = settings
 
-    async def request(self, data: HTTPRequestData) -> ResponseContent:
+    async def request(
+        self, data: HTTPRequestData
+    ) -> tuple[ResponseContent, ResponseMetadata]:
         response = await self._make_request(data)
-        return self._handle_response(response)
+
+        # Handle redirects manually to capture Location header
+        redirect_chain = [str(response.url)]
+
+        # If this is a redirect response (3xx), follow it manually
+        is_redirect = (
+            HTTPStatus.MULTIPLE_CHOICES <= response.status_code < HTTPStatus.BAD_REQUEST
+        )
+        if is_redirect and "location" in response.headers:
+            location = response.headers["location"]
+            redirect_chain.append(location)
+
+            # Create a new request to the redirect location
+            redirect_data = HTTPRequestData(
+                url=location,
+                method=data.method,
+                headers=data.headers,
+                params=data.params,
+            )
+            response = await self._make_request(redirect_data)
+
+        content = self._handle_response(response)
+
+        # Create response metadata
+        metadata = ResponseMetadata(
+            final_url=str(response.url),
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            content_type=response.headers.get("content-type"),
+            redirect_chain=redirect_chain if len(redirect_chain) > 1 else None,
+        )
+
+        return content, metadata
 
     async def stream(self, data: HTTPRequestData) -> Response:
         """Returns a httpx.Response created with stream=True"""

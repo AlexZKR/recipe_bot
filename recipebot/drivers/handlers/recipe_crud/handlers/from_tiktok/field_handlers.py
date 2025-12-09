@@ -202,6 +202,7 @@ async def finalize_tiktok_recipe(
             desc=recipe_dto.desc,
             estimated_time=recipe_dto.estimated_time,
             notes=recipe_dto.notes,
+            link=recipe_dto.link,
         )
 
         # Save to database

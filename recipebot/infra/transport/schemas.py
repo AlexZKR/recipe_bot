@@ -7,6 +7,16 @@ from pydantic import BaseModel
 ResponseContent = dict[str, Any] | str
 
 
+class ResponseMetadata(BaseModel):
+    """Metadata from HTTP response."""
+
+    final_url: str
+    status_code: int
+    headers: dict[str, Any]
+    content_type: str | None = None
+    redirect_chain: list[str] | None = None
+
+
 class ContentTypeEnum(StrEnum):
     binary_octet_stream = "binary/octet-stream"
     json = "application/json"

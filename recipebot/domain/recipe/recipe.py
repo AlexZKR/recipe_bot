@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -58,10 +59,19 @@ class RecipeDTO(BaseModel):
 🍳 Ingredients:
 """
 
-        # Format ingredients nicely
+        # Format ingredients nicely, grouped by category
         if self.ingredients:
+            # Group ingredients by their group field
+            grouped_ingredients = defaultdict(list)
+
             for ingredient in self.ingredients:
-                recipe_text += f"• {ingredient.basic_info()}\n"
+                grouped_ingredients[ingredient.group].append(ingredient)
+
+            # Display each group
+            for group_name, ingredients_in_group in grouped_ingredients.items():
+                recipe_text += f"\n**{group_name}:**\n"
+                for ingredient in ingredients_in_group:
+                    recipe_text += f"• {ingredient.basic_info()}\n"
         else:
             recipe_text += "No ingredients specified\n"
 

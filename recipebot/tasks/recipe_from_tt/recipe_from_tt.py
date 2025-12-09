@@ -1,6 +1,6 @@
 from recipebot.domain.recipe.recipe import RecipeDTO
 from recipebot.ports.services.recipe_parser import RecipeParserABC
-from recipebot.ports.services.tt_resolver.tt_resolver import TTResolverABC
+from recipebot.ports.services.tt_resolver import TTResolverABC
 
 
 class RecipeFromTTTask:
@@ -13,6 +13,7 @@ class RecipeFromTTTask:
         self.recipe_parser = recipe_parser
 
     async def run(self, url: str) -> RecipeDTO:
-        description = await self.tt_resolver.resolve(url)
-        recipe_dto = await self.recipe_parser.parse(description)
+        resolution_result = await self.tt_resolver.resolve(url)
+        recipe_dto = await self.recipe_parser.parse(resolution_result.description)
+        recipe_dto.link = resolution_result.source_url
         return recipe_dto

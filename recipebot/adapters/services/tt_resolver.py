@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup, Tag
 
 from recipebot.infra.transport.base import AbstractAsyncHTTPTransport
 from recipebot.infra.transport.schemas import HTTPRequestData
-from recipebot.ports.services.tt_resolver import TTResolverABC
+from recipebot.ports.services.tt_resolver import ResolutionResult, TTResolverABC
 from recipebot.ports.services.tt_resolver.exceptions import (
     DescriptionNotFound,
     InvalidTikTokURL,
@@ -35,19 +35,22 @@ class HttpxTTResolver(TTResolverABC):
                 raise
             raise InvalidTikTokURL(f"Invalid URL: {url} - {str(e)}")
 
-    async def resolve(self, url: str) -> str:
+    async def resolve(self, url: str) -> ResolutionResult:
         # Validate URL first
         self._validate_tiktok_url(url)
 
         try:
             data = HTTPRequestData(url=url, method=HTTPMethod.GET)
-            html = await self.transport.request(data)
+            html, metadata = await self.transport.request(data)
         except Exception as e:
             raise TikTokNotAccessible(f"Failed to access TikTok URL {url}: {str(e)}")
 
         # Extract description from HTML
         if isinstance(html, str):
-            return self._extract_description(html)
+            description = self._extract_description(html)
+            return ResolutionResult(
+                description=description, source_url=metadata.final_url
+            )
         else:
             raise TikTokNotAccessible(
                 f"Unexpected response type from TikTok: {type(html)}"
