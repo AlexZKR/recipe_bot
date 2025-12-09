@@ -8,7 +8,8 @@ authors = [{ name = "Alex Zakrevsky", email = "zakrevskyalex1323@gmail.com" }]
 description = "Recipe Telegram Bot that allows to add recipes and generate menus from them."
 readme = "README.md"
 requires-python = ">=3.13.7"
-dynamic = ["version", "dependencies", "optional-dependencies"]
+dynamic = ["dependencies", "optional-dependencies"]
+version = "1.0.0"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
@@ -50,7 +51,7 @@ line-length = 88
 lint.ignore = ["E501"]
 lint.select = ["E", "F", "I", "PL", "UP", "W"]
 lint.extend-select = ["I"]
-exclude = ["migrations"]
+exclude = ["migrations", "notebooks"]
 fix = true
 target-version = "py313"
 src = ["recipebot", "tests"]
@@ -60,3 +61,6 @@ exclude_dirs = ["venv", "tests"]
 
 [tool.mypy]
 exclude = '(?x)^(venv|\.venv|build|dist|\.mypy_cache)/'
+[[tool.mypy.overrides]]
+module = ["groq.*"]
+ignore_missing_imports = true

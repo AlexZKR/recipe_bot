@@ -21,7 +21,7 @@ class MockUserRepo(UserRepositoryABC):
         self._users.append(user)
         return user
 
-    async def get_by_tg_id(self, id: int) -> User | None:
+    async def get(self, id: int) -> User | None:
         for user in self._users:
             if user.tg_id == id:
                 return user
@@ -30,4 +30,4 @@ class MockUserRepo(UserRepositoryABC):
     async def get_by_tg_user(self, user: TGUser | None) -> User | None:
         if not user:
             return None
-        return await self.get_by_tg_id(user.id)
+        return await self.get(user.id)
