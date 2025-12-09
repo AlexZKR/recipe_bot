@@ -2,10 +2,6 @@ from logging import getLogger
 
 from telegram import User as TGUser
 
-from recipebot.adapters.repositories.sql.auth.exceptions import (
-    UserAlreadyExists,
-    UserNotFound,
-)
 from recipebot.adapters.repositories.sql.auth.user_repo.queries import (
     GET_BY_TG_ID_QUERY,
     INSERT_USER_QUERY,
@@ -15,6 +11,7 @@ from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import (
 )
 from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.domain.auth.user import User
+from recipebot.ports.repositories.exceptions import UserAlreadyExists, UserNotFound
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
 
 logger = getLogger(__name__)
@@ -27,7 +24,7 @@ class UserAsyncpgRepo(UserRepositoryABC):
     async def add(self, register_data: TGUser) -> User:
         logger.info("Starting user registration")
         async with self.conn.get_cursor() as conn:
-            if await self.get_by_tg_id(register_data.id):
+            if await self.get(register_data.id):
                 raise UserAlreadyExists(
                     f"Username {register_data.username} already registered."
                 )
@@ -39,14 +36,12 @@ class UserAsyncpgRepo(UserRepositoryABC):
                 register_data.first_name,
                 register_data.last_name,
             )
-            if row is None:
-                raise RuntimeError("Insert failed, no row returned")
+            if not row:
+                raise Exception("User not created")
 
-            logger.critical(row)
+            return User.model_validate(dict(row))
 
-            return User(**dict(row))
-
-    async def get_by_tg_id(self, id: int) -> User | None:
+    async def get(self, id: int) -> User | None:
         async with self.conn.get_cursor() as conn:
             row = await conn.fetchrow(load_query(__file__, GET_BY_TG_ID_QUERY), id)
             if not row:
@@ -56,4 +51,4 @@ class UserAsyncpgRepo(UserRepositoryABC):
     async def get_by_tg_user(self, user: TGUser | None) -> User | None:
         if not user:
             raise UserNotFound("TG user wasn't provided")
-        return await self.get_by_tg_id(user.id)
+        return await self.get(user.id)

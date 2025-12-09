@@ -7,6 +7,9 @@ from asyncpg.pool import PoolConnectionProxy
 
 from recipebot.adapters.repositories.sql.base.queries import (
     CREATE_GROUPS_TABLE,
+    CREATE_RECIPE_TAGS_TABLE,
+    CREATE_RECIPES_TABLE,
+    CREATE_USERS_GROUPS_JUNCTION_TABLE,
     CREATE_USERS_TABLE,
 )
 from recipebot.adapters.repositories.sql.base.utils import load_query
@@ -68,3 +71,7 @@ class AsyncpgConnection:
         async with self.get_cursor() as conn:
             await conn.execute(load_query(__file__, CREATE_USERS_TABLE))
             await conn.execute(load_query(__file__, CREATE_GROUPS_TABLE))
+            await conn.execute(load_query(__file__, CREATE_USERS_GROUPS_JUNCTION_TABLE))
+
+            await conn.execute(load_query(__file__, CREATE_RECIPES_TABLE))
+            await conn.execute(load_query(__file__, CREATE_RECIPE_TAGS_TABLE))

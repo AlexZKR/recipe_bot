@@ -11,7 +11,7 @@ class UserRepositoryABC(ABC):
         pass
 
     @abstractmethod
-    async def get_by_tg_id(self, id: int) -> User | None:
+    async def get(self, id: int) -> User | None:
         pass
 
     @abstractmethod
