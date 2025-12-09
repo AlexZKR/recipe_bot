@@ -50,7 +50,7 @@ line-length = 88
 lint.ignore = ["E501"]
 lint.select = ["E", "F", "I", "PL", "UP", "W"]
 lint.extend-select = ["I"]
-exclude = ["migrations"]
+exclude = ["migrations", "notebooks"]
 fix = true
 target-version = "py313"
 src = ["recipebot", "tests"]
@@ -60,3 +60,6 @@ exclude_dirs = ["venv", "tests"]
 
 [tool.mypy]
 exclude = '(?x)^(venv|\.venv|build|dist|\.mypy_cache)/'
+[[tool.mypy.overrides]]
+module = ["groq.*"]
+ignore_missing_imports = true

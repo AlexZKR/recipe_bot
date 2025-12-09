@@ -38,3 +38,8 @@ coverage:
 	PYTHONPATH=$(PWD) \
 	&& . venv/bin/activate \
 	&& python -m webbrowser -t htmlcov/index.html
+
+# Jupyter notebook
+notebook:
+	. venv/bin/activate \
+	&& jupyter notebook --notebook-dir=notebooks

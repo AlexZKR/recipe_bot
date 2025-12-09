@@ -196,6 +196,8 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         category=RecipeCategory(context.user_data["category"]),
         user_id=update.effective_user.id,
         tags=tag_names,
+        desc=context.user_data.get("desc"),
+        estimated_time=context.user_data.get("estimated_time"),
     )
     await recipe_repo.add(recipe)
 

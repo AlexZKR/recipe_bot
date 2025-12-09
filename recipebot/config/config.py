@@ -35,6 +35,17 @@ class PostgreSQLSettings(BaseSettings):
         return f"postgresql://{self.user}{password_part}@{self.host}:{self.port}/{self.name}"
 
 
+class HTTPTransportSettings(BaseSettings):
+    chunk_size: int = 8192
+    user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+    default_timeout: int = 30
+    follow_redirects: bool = True
+
+    @property
+    def common_headers(self) -> dict[str, str]:
+        return {"user-agent": self.user_agent}
+
+
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="app__", env_file=".env", extra="ignore"
@@ -43,7 +54,26 @@ class AppSettings(BaseSettings):
     recipe_page_size: int = 5
 
 
+class GroqSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="groq__", env_file=".env", extra="ignore"
+    )
+    api_key: SecretStr = SecretStr("api_key")
+
+
+class TiktokDescriptionParseSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="tiktok_description_parse__", env_file=".env", extra="ignore"
+    )
+    model: str = "moonshotai/kimi-k2-instruct-0905"
+
+
 class Settings(BaseSettings):
     TELEGRAM_BOT_SETTINGS: TelegramBotSettings = TelegramBotSettings()
     POSTGRESQL: PostgreSQLSettings = PostgreSQLSettings()
+    HTTP_TRANSPORT: HTTPTransportSettings = HTTPTransportSettings()
     APP: AppSettings = AppSettings()
+    GROQ_SETTINGS: GroqSettings = GroqSettings()
+    TIKTOK_DESCRIPTION_PARSE_SETTINGS: TiktokDescriptionParseSettings = (
+        TiktokDescriptionParseSettings()
+    )

@@ -21,6 +21,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.utils import (
 
 async def save_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Save the title field."""
+    print("DEBUG: save_title called")  # Debug
     return await save_field_value(update, context, EDITING_TITLE)
 
 

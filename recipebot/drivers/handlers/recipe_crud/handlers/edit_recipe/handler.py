@@ -199,6 +199,9 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
         return
 
     recipe_id, field_name = parsed
+    print(
+        f"DEBUG: handle_field_selection parsed: recipe_id='{recipe_id}', field_name='{field_name}'"
+    )  # Debug
 
     # Get recipe from user context (already fetched in previous step)
     if context.user_data is None:
@@ -227,7 +230,9 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
     await query.edit_message_text(prompt, parse_mode="Markdown", reply_markup=None)
 
     # Start the editing conversation and return the appropriate state
-    return start_field_editing(context, recipe_id, field_name)
+    result_state = start_field_editing(context, recipe_id, field_name)
+    print(f"DEBUG: handle_field_selection returning state: {result_state}")  # Debug
+    return result_state
 
 
 async def cancel_edit(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -341,5 +346,6 @@ edit_field_conversation = ConversationHandler(
     fallbacks=[CommandHandler("cancel", cancel_edit)],
     persistent=True,
     per_message=False,
+    conversation_timeout=300,  # 5 minutes timeout
     name="edit_recipe_conversation",
 )

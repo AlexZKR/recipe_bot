@@ -4,7 +4,6 @@ from telegram.ext import ContextTypes, ConversationHandler
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
-    EDIT_FIELD_MIN_PARTS,
     EDIT_RECIPE_PREFIX,
     EDITING_CATEGORY,
     EDITING_DESCRIPTION,
@@ -46,15 +45,26 @@ def parse_edit_field_callback(callback_data: str) -> tuple[str, str] | None:
     Returns:
         Tuple of (recipe_id, field_name) or None if invalid
     """
+    print(f"DEBUG: parse_edit_field_callback input: '{callback_data}'")  # Debug
     if not callback_data or not callback_data.startswith("edit_field_"):
         return None
 
-    parts = callback_data.split("_")
-    if len(parts) < EDIT_FIELD_MIN_PARTS:
+    # Remove the "edit_field_" prefix
+    remaining = callback_data[11:]  # len("edit_field_") = 11
+    print(f"DEBUG: parse_edit_field_callback remaining: '{remaining}'")  # Debug
+
+    # Split on the first "_" to separate recipe_id from field_name
+    # This handles field names with underscores like "estimated_time"
+    parts = remaining.split("_", 1)
+    print(f"DEBUG: parse_edit_field_callback parts: {parts}")  # Debug
+    if len(parts) != 2:  # noqa: PLR2004
         return None
 
-    recipe_id = parts[2]
-    field_name = parts[3]
+    recipe_id = parts[0]
+    field_name = parts[1]
+    print(
+        f"DEBUG: parse_edit_field_callback result: recipe_id='{recipe_id}', field_name='{field_name}'"
+    )  # Debug
 
     return recipe_id, field_name
 
@@ -105,7 +115,9 @@ def start_field_editing(context, recipe_id: str, field_name: str) -> int:
 
 async def save_field_value(update: Update, context: ContextTypes.DEFAULT_TYPE, state):
     """Save the field value and finish editing."""
+    print(f"DEBUG: save_field_value called with state: {state}")  # Debug
     if not update.message or not context.user_data:
+        print("DEBUG: save_field_value - missing message or context")  # Debug
         return ConversationHandler.END
 
     # Get the recipe and field info from context
@@ -144,11 +156,9 @@ async def save_field_value(update: Update, context: ContextTypes.DEFAULT_TYPE, s
 
     # Display the updated recipe
     await update.message.reply_text(
-        "✅ Recipe updated successfully!\n\n" + recipe.to_md()
-    )
-
-    await update.message.reply_text(
-        f"✅ {field_name.title()} updated successfully!", reply_markup=MAIN_KEYBOARD
+        f"✅ {field_name.title()} updated successfully!\n\nHere's your updated recipe:\n\n"
+        + recipe.to_md(),
+        reply_markup=MAIN_KEYBOARD,
     )
 
     # Clear user data

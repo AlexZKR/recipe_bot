@@ -17,11 +17,13 @@ class PaginatedResult:
         page: int,
         page_size: int | None = None,
         callback_prefix: str = "",
+        item_type: str = "recipes",
     ):
         self.items = items
         self.page = page
         self.page_size = page_size or settings.APP.recipe_page_size
         self.callback_prefix = callback_prefix
+        self.item_type = item_type
 
         self.total_items = len(items)
         self.total_pages = (self.total_items + self.page_size - 1) // self.page_size
@@ -60,11 +62,11 @@ class PaginatedResult:
     def get_page_info_text(self) -> str:
         """Get page information text."""
         if self.total_pages <= 1:
-            return f"Total: {self.total_items} recipes"
+            return f"Total: {self.total_items} {self.item_type}"
 
         return (
             f"Page {self.page}/{self.total_pages} "
-            f"(showing {len(self.current_page_items)} of {self.total_items} recipes)"
+            f"(showing {len(self.current_page_items)} of {self.total_items} {self.item_type})"
         )
 
 
@@ -87,10 +89,12 @@ def create_paginated_keyboard(
 
     # Add current page items
     for item in paginated_result.current_page_items:
+        # Handle different item types (Recipe has title, RecipeTag has name)
+        display_text = getattr(item, "title", getattr(item, "name", str(item)))
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    item.title,
+                    display_text,
                     callback_data=item_callback_factory(item, paginated_result.page),
                 )
             ]

@@ -31,6 +31,8 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
     search_pagination_handler,
     search_recipes_handler,
     search_result_handler,
+    search_tag_handler,
+    search_tag_pagination_handler,
 )
 
 
@@ -64,6 +66,8 @@ def add_handlers(app: Application) -> None:
     app.add_handler(delete_confirmation_handler)
     app.add_handler(delete_pagination_handler)
     app.add_handler(search_result_handler)
+    app.add_handler(search_tag_handler)
+    app.add_handler(search_tag_pagination_handler)
     app.add_handler(global_tag_callback_handler)
     app.add_handler(pagination_handler)
     app.add_handler(search_recipes_handler)

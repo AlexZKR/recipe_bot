@@ -7,3 +7,4 @@ pytest-asyncio
 pre-commit
 
 asyncpg-stubs
+types-beautifulsoup4
