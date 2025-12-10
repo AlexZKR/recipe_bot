@@ -55,7 +55,8 @@ async def _handle_start_manual_entry_callback(
 
     # Send the start message
     await query.edit_message_text(ADD_START)
-    await context.bot.send_message(chat_id=query.message.chat.id, text=ADD_TITLE)
+    if query.message:
+        await context.bot.send_message(chat_id=query.message.chat.id, text=ADD_TITLE)
 
     return TITLE
 
@@ -100,7 +101,7 @@ add_recipe_handler = ConversationHandler(
             global_tag_callback_handler,
         ],
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],
+    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],  # type: ignore[list-item]
     persistent=True,
     name="add_recipe_conversation",
 )

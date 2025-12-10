@@ -344,7 +344,7 @@ edit_field_conversation = ConversationHandler(
         EDITING_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_notes)],
         EDITING_LINK: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_link)],
     },
-    fallbacks=[CommandHandler("cancel", cancel_edit), basic_fallback_handler],
+    fallbacks=[CommandHandler("cancel", cancel_edit), basic_fallback_handler],  # type: ignore[list-item]
     persistent=True,
     per_message=False,
     conversation_timeout=300,  # 5 minutes timeout

@@ -2,7 +2,7 @@ from enum import StrEnum
 from http import HTTPMethod
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import AnyHttpUrl, BaseModel
 
 ResponseContent = dict[str, Any] | str
 
@@ -10,11 +10,11 @@ ResponseContent = dict[str, Any] | str
 class ResponseMetadata(BaseModel):
     """Metadata from HTTP response."""
 
-    final_url: str
+    final_url: AnyHttpUrl
     status_code: int
     headers: dict[str, Any]
     content_type: str | None = None
-    redirect_chain: list[str] | None = None
+    redirect_chain: list[AnyHttpUrl] | None = None
 
 
 class ContentTypeEnum(StrEnum):

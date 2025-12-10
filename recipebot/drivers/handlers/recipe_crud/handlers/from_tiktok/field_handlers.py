@@ -273,7 +273,10 @@ async def handle_manual_entry_choice(
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(TIKTOK_PROCESSING_FAILED, reply_markup=reply_markup)
+    if update.message:
+        await update.message.reply_text(
+            TIKTOK_PROCESSING_FAILED, reply_markup=reply_markup
+        )
     return MANUAL_ENTRY
 
 
@@ -292,7 +295,10 @@ async def handle_manual_entry_callback(
         # Prepare data for add_recipe conversation and instruct user to use /add
 
         # Get the existing TikTok recipe data
-        parsed_recipe_data = context.user_data.get(
+        if not context.user_data:
+            return ConversationHandler.END
+
+        parsed_recipe_data = context.user_data.pop(
             TikTokRecipeContextKey.PARSED_RECIPE, {}
         )
 

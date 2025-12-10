@@ -6,6 +6,7 @@ from typing import cast
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
+from pydantic import AnyHttpUrl
 
 from recipebot.infra.transport.base import AbstractAsyncHTTPTransport
 from recipebot.infra.transport.schemas import HTTPRequestData
@@ -51,7 +52,7 @@ class HttpxTTResolver(TTResolverABC):
         try:
             description = self._extract_description(cast(str, html))
             return ResolutionResult(
-                description=description, source_url=metadata.final_url
+                description=description, source_url=AnyHttpUrl(metadata.final_url)
             )
 
         except Exception as e:

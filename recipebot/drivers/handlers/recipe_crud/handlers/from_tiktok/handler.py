@@ -60,7 +60,7 @@ from_tiktok_handler = ConversationHandler(
         ],
         SAVE: [],  # This state is handled internally
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],
+    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],  # type: ignore[list-item]
     persistent=True,
     name="from_tiktok_conversation",
 )
