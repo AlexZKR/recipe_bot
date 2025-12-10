@@ -1,6 +1,6 @@
-from typing import TypedDict, cast
+from typing import Any, cast
 
-from telegram.ext import ContextTypes
+from typing_extensions import TypedDict
 
 from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import AsyncpgConnection
 from recipebot.infra.groq.client import GroqClient
@@ -15,5 +15,8 @@ class BotState(TypedDict):
     groq_client: GroqClient
 
 
-def get_state(context: ContextTypes.DEFAULT_TYPE) -> BotState:
-    return cast(BotState, context.bot_data)
+container: dict[str, Any] = {}
+
+
+def get_state() -> BotState:
+    return cast(BotState, container)
