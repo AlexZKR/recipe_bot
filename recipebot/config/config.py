@@ -1,3 +1,5 @@
+import urllib.parse
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -30,7 +32,11 @@ class PostgreSQLSettings(BaseSettings):
         Returns a PostgreSQL DSN string in the format:
         postgresql://user:password@host:port/dbname
         """
-        password_part = f":{self.password.get_secret_value()}" if self.password else ""
+        password_part = (
+            f":{urllib.parse.quote(self.password.get_secret_value())}"
+            if self.password
+            else ""
+        )
         return f"postgresql://{self.user}{password_part}@{self.host}:{self.port}/{self.name}"
 
 
