@@ -67,7 +67,7 @@ async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # Get dependencies from bot data
         async with init_transport() as transport:
             tt_resolver: TTResolverABC = HttpxTTResolver(transport)
-            recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
+            recipe_parser = GroqRecipeParser(get_state()["groq_client"])
             task = RecipeFromTTTask(
                 tt_resolver=tt_resolver,
                 recipe_parser=recipe_parser,
@@ -221,7 +221,7 @@ async def finalize_tiktok_recipe(  # noqa: PLR0912
         )
 
         # Save to database
-        recipe_repo: RecipeRepositoryABC = get_state(context)["recipe_repo"]
+        recipe_repo: RecipeRepositoryABC = get_state()["recipe_repo"]
         saved_recipe = await recipe_repo.add(recipe)
 
         # Show success message with recipe details

@@ -16,7 +16,7 @@ async def show_tags_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     # Get existing tags for user
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     existing_tags = await recipe_repo.get_user_tags(update.effective_user.id)
 
     # Get already selected tags for this recipe

@@ -30,7 +30,7 @@ async def _show_recipe_list(
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     recipes = await recipe_repo.list_by_user(update.effective_user.id)
 
     if not recipes:
@@ -94,7 +94,7 @@ async def handle_recipe_selection(update: Update, context: ContextTypes.DEFAULT_
         return
 
     # Get recipe details
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     try:
         recipe = await recipe_repo.get(UUID(recipe_id))
     except RecipeNotFound:

@@ -15,7 +15,7 @@ def only_registered(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
-            user_repo = get_state(context)["user_repo"]
+            user_repo = get_state()["user_repo"]
             user = await user_repo.get_by_tg_user(update.effective_user)
             if not user:
                 raise UserNotFound

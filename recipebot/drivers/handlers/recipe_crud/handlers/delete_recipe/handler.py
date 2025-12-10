@@ -38,7 +38,7 @@ async def _show_delete_recipe_list(
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     recipes = await recipe_repo.list_by_user(update.effective_user.id)
 
     if not recipes:
@@ -97,7 +97,7 @@ async def handle_recipe_selection_for_delete(
         return
 
     # Get recipe details to show current values
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     try:
         recipe = await recipe_repo.get(UUID(recipe_id))
     except RecipeNotFound:
@@ -154,7 +154,7 @@ async def handle_delete_confirmation(
         return
 
     # Delete the recipe
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     user_id = query.from_user.id if query.from_user else None
     if not user_id:
         await query.edit_message_text("User not found.")
@@ -197,7 +197,7 @@ async def _return_to_recipe_selection(query, context: ContextTypes.DEFAULT_TYPE)
     if not user_id:
         return
 
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     recipes = await recipe_repo.list_by_user(user_id)
 
     if not recipes:

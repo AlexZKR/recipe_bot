@@ -11,7 +11,7 @@ from recipebot.ports.repositories.exceptions import RepositoryException
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_chat:
         raise Exception("Not chat in the update")
-    user_repo = get_state(context)["user_repo"]
+    user_repo = get_state()["user_repo"]
     if not update.effective_user:
         raise Exception("No user in the update")
     try:

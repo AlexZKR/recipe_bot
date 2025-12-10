@@ -147,7 +147,7 @@ async def save_field_value(update: Update, context: ContextTypes.DEFAULT_TYPE, s
     setattr(recipe, field_name, new_value)
 
     # Save back to database
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     try:
         await recipe_repo.update(recipe)
     except ValueError as e:
