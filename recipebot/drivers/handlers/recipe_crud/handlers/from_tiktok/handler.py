@@ -26,6 +26,9 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.field_handlers 
     handle_tags,
     handle_tiktok_url,
 )
+from recipebot.drivers.handlers.recipe_crud.shared_tag_callbacks import (
+    global_tag_callback_handler,
+)
 
 
 @only_registered
@@ -53,6 +56,7 @@ from_tiktok_handler = ConversationHandler(
         CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_category)],
         TAGS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tags),
+            global_tag_callback_handler,
         ],
         SAVE: [],  # This state is handled internally
     },

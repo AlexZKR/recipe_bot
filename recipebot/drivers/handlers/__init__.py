@@ -6,7 +6,6 @@ from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe import (
     add_recipe_handler,
-    global_tag_callback_handler,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe import (
     delete_confirmation_handler,
@@ -36,6 +35,9 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
     search_result_handler,
     search_tag_handler,
     search_tag_pagination_handler,
+)
+from recipebot.drivers.handlers.recipe_crud.shared_tag_callbacks import (
+    global_tag_callback_handler,
 )
 
 
