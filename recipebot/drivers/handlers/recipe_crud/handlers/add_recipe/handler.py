@@ -37,6 +37,31 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.handler_context
 )
 
 
+async def _handle_start_manual_entry_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Entry point for add_recipe conversation from manual entry callback."""
+    query = update.callback_query
+    if not query:
+        return ConversationHandler.END
+
+    await query.answer()
+
+    # Check if this is coming from failed TikTok parsing
+    if context.user_data and context.user_data.get(
+        TikTokRecipeContextKey.PENDING_TIKTOK_DATA
+    ):
+        # Transfer the pending TikTok data to the current context
+        pending_data = context.user_data.pop(TikTokRecipeContextKey.PENDING_TIKTOK_DATA)
+        context.user_data.update(pending_data)
+
+    # Send the start message
+    await query.edit_message_text(ADD_START)
+    await context.bot.send_message(chat_id=query.message.chat.id, text=ADD_TITLE)
+
+    return TITLE
+
+
 # Global callback handler for tag operations during recipe creation
 async def global_handle_tag_callbacks(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -51,7 +76,7 @@ async def global_handle_tag_callbacks(
     if not (
         callback_data.startswith("tag_") or callback_data in ["new_tag", "tags_done"]
     ):
-        return  # Not a tag callback, let other handlers process it
+        return  # Not a handled callback, let other handlers process it
 
     # Only handle if we're in recipe creation context (regular or TikTok)
     if not context.user_data or (
@@ -93,6 +118,14 @@ async def add_recipe_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if not update.effective_chat:
         raise Exception("No chat in the update")
 
+    # Check if this is coming from failed TikTok parsing
+    if context.user_data and context.user_data.get(
+        TikTokRecipeContextKey.PENDING_TIKTOK_DATA
+    ):
+        # Transfer the pending TikTok data to the current context
+        pending_data = context.user_data.pop(TikTokRecipeContextKey.PENDING_TIKTOK_DATA)
+        context.user_data.update(pending_data)
+
     await context.bot.send_message(chat_id=update.effective_chat.id, text=ADD_START)
     await context.bot.send_message(chat_id=update.effective_chat.id, text=ADD_TITLE)
 
@@ -101,7 +134,12 @@ async def add_recipe_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 # Conversation handler for adding recipes
 add_recipe_handler = ConversationHandler(
-    entry_points=[CommandHandler("add", add_recipe_start)],
+    entry_points=[
+        CommandHandler("add", add_recipe_start),
+        CallbackQueryHandler(
+            _handle_start_manual_entry_callback, pattern="^start_manual_entry$"
+        ),
+    ],
     states={
         TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_title)],
         INGREDIENTS: [

@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import (
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     ConversationHandler,
@@ -10,6 +11,7 @@ from telegram.ext import (
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.constants import (
     CATEGORY,
+    MANUAL_ENTRY,
     PROCESSING,
     SAVE,
     TAGS,
@@ -19,6 +21,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.constants impor
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.field_handlers import (
     handle_cancel,
     handle_category,
+    handle_manual_entry_callback,
     handle_tags,
     handle_tiktok_url,
 )
@@ -41,6 +44,11 @@ from_tiktok_handler = ConversationHandler(
     states={
         URL: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tiktok_url)],
         PROCESSING: [],  # This state is handled internally
+        MANUAL_ENTRY: [
+            CallbackQueryHandler(
+                handle_manual_entry_callback, pattern="^(manual_entry|cancel_manual)$"
+            )
+        ],
         CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_category)],
         TAGS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tags),

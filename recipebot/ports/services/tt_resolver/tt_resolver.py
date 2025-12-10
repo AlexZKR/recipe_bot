@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class ResolutionResult(BaseModel):
     """Result of TikTok URL resolution."""
 
-    description: str
+    description: str | None
     source_url: str
 
 

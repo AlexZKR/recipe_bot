@@ -187,6 +187,13 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get tags from context (already as tag names)
     tag_names = context.user_data.get("tags", [])
 
+    # Check for TikTok source data
+    link = None
+
+    if context.user_data.get("from_tiktok"):
+        tiktok_data = context.user_data.get("tiktok_source", {})
+        link = tiktok_data.get("link")
+
     # Save the recipe to the database
     recipe_repo = get_state(context)["recipe_repo"]
     recipe = Recipe(
@@ -198,6 +205,7 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tags=tag_names,
         desc=context.user_data.get("desc"),
         estimated_time=context.user_data.get("estimated_time"),
+        link=link,
     )
     await recipe_repo.add(recipe)
 
