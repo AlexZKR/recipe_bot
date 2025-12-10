@@ -61,5 +61,6 @@ async def global_handle_tag_callbacks(
 
 # Create the handler instance
 global_tag_callback_handler = CallbackQueryHandler(
-    global_handle_tag_callbacks  # No pattern - catch all callbacks
+    global_handle_tag_callbacks,
+    pattern=r"^(tag_[^ ]+|new_tag|tags_done)$",
 )
