@@ -10,8 +10,7 @@ class TelegramBotSettings(BaseSettings):
         env_file=".env",
         extra="ignore",
     )
-    test_token: SecretStr = SecretStr("test_token")
-    prod_token: SecretStr = SecretStr("prod_token")
+    token: SecretStr = SecretStr("token")
 
 
 class PostgreSQLSettings(BaseSettings):
