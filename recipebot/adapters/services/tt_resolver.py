@@ -1,9 +1,12 @@
 import json
+import logging
 import re
 from http import HTTPMethod
+from typing import cast
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
+from pydantic import AnyHttpUrl
 
 from recipebot.infra.transport.base import AbstractAsyncHTTPTransport
 from recipebot.infra.transport.schemas import HTTPRequestData
@@ -13,6 +16,8 @@ from recipebot.ports.services.tt_resolver.exceptions import (
     InvalidTikTokURL,
     TikTokNotAccessible,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class HttpxTTResolver(TTResolverABC):
@@ -36,7 +41,6 @@ class HttpxTTResolver(TTResolverABC):
             raise InvalidTikTokURL(f"Invalid URL: {url} - {str(e)}")
 
     async def resolve(self, url: str) -> ResolutionResult:
-        # Validate URL first
         self._validate_tiktok_url(url)
 
         try:
@@ -45,28 +49,30 @@ class HttpxTTResolver(TTResolverABC):
         except Exception as e:
             raise TikTokNotAccessible(f"Failed to access TikTok URL {url}: {str(e)}")
 
-        # Extract description from HTML
-        if isinstance(html, str):
-            description = self._extract_description(html)
+        try:
+            description = self._extract_description(cast(str, html))
             return ResolutionResult(
-                description=description, source_url=metadata.final_url
-            )
-        else:
-            raise TikTokNotAccessible(
-                f"Unexpected response type from TikTok: {type(html)}"
+                description=description, source_url=AnyHttpUrl(metadata.final_url)
             )
 
-    def _extract_description(self, html: str) -> str:
+        except Exception as e:
+            raise TikTokNotAccessible(
+                f"Failed to extract description from TikTok URL {url}: {str(e)}"
+            )
+
+    def _extract_description(self, html: str) -> str | None:
         try:
             soup = BeautifulSoup(html, "html.parser")
             script_tag = soup.find("script", id="__UNIVERSAL_DATA_FOR_REHYDRATION__")
 
             if not script_tag or not isinstance(script_tag, Tag):
-                raise DescriptionNotFound("TikTok data script tag not found in page")
+                logger.warning("TikTok data script tag not found in page")
+                return None
 
             script_content = script_tag.string
             if not script_content or not isinstance(script_content, str):
-                raise DescriptionNotFound("TikTok data script tag has no content")
+                logger.warning("TikTok data script tag has no content")
+                return None
 
             try:
                 data = json.loads(script_content)
@@ -77,7 +83,8 @@ class HttpxTTResolver(TTResolverABC):
 
             default_scope = data.get("__DEFAULT_SCOPE__", {})
             if not default_scope:
-                raise DescriptionNotFound("No default scope found in TikTok data")
+                logger.warning("No default scope found in TikTok data")
+                return None
 
             item_struct = (
                 default_scope.get("webapp.video-detail", {})
@@ -85,11 +92,13 @@ class HttpxTTResolver(TTResolverABC):
                 .get("itemStruct", {})
             )
             if not item_struct:
-                raise DescriptionNotFound("Video details not found in TikTok data")
+                logger.warning("Video details not found in TikTok data")
+                return None
 
             desc = item_struct.get("desc")
             if not desc:
-                raise DescriptionNotFound("No description found in video details")
+                logger.warning("No description found in video details")
+                return None
 
             return desc
 

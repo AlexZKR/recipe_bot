@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from recipebot.adapters.services.groq_tt_parser.tt_recipe_parser import (
-    GroqTTRecipeParser,
+from recipebot.adapters.services.groq_parser.recipe_parser import (
+    GroqRecipeParser,
 )
 from recipebot.adapters.services.tt_resolver import HttpxTTResolver, TTResolverABC
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory, RecipeDTO
@@ -15,11 +15,14 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers i
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.constants import (
     CATEGORY,
+    MANUAL_ENTRY,
     TAGS,
     TIKTOK_CANCEL,
     TIKTOK_CATEGORY,
+    TIKTOK_MANUAL_ENTRY_PROMPT,
     TIKTOK_PROCESSING,
     TIKTOK_PROCESSING_ERROR,
+    TIKTOK_PROCESSING_FAILED,
     TIKTOK_PROCESSING_SUCCESS,
     TIKTOK_SAVE_SUCCESS,
     URL,
@@ -30,6 +33,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.handler_context
 from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
     create_category_reply_keyboard,
 )
+from recipebot.drivers.state import get_state
 from recipebot.infra.transport.httpx_transport import init_transport
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 from recipebot.ports.services.tt_resolver.exceptions import (
@@ -44,7 +48,6 @@ if TYPE_CHECKING:
 
 async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle TikTok URL input and process it."""
-    # Ensure we have a valid message with text
     if not update.message or not update.message.text:
         await update.message.reply_text(
             "Please send a valid TikTok URL."
@@ -64,7 +67,7 @@ async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # Get dependencies from bot data
         async with init_transport() as transport:
             tt_resolver: TTResolverABC = HttpxTTResolver(transport)
-            recipe_parser = GroqTTRecipeParser(context.bot_data["groq_client"])
+            recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
             task = RecipeFromTTTask(
                 tt_resolver=tt_resolver,
                 recipe_parser=recipe_parser,
@@ -77,11 +80,15 @@ async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             recipe_dto.model_dump()
         )
 
+        await update.message.reply_text("📱 Here's your recipe from TikTok:\n")
+        await update.message.reply_text(recipe_dto.to_md())
+
+        if len(recipe_dto.ingredients) == 0:
+            return await handle_manual_entry_choice(update, context)
+
         await update.message.reply_text(TIKTOK_PROCESSING_SUCCESS)
 
         # Display the parsed recipe
-        await update.message.reply_text("📱 Here's your recipe from TikTok:\n")
-        await update.message.reply_text(recipe_dto.to_md())
 
         # Explain next steps for enhancing the recipe
         await update.message.reply_text(
@@ -97,11 +104,13 @@ async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return CATEGORY
 
     except (InvalidTikTokURL, TikTokNotAccessible) as e:
-        await update.message.reply_text(f"{TIKTOK_PROCESSING_ERROR}\n\nError: {str(e)}")
+        await update.message.reply_text(
+            f"{TIKTOK_PROCESSING_ERROR}\n\nError: {str(e)}\n You can submit a valid URL or /cancel"
+        )
         return URL
     except Exception as e:
         await update.message.reply_text(
-            f"{TIKTOK_PROCESSING_ERROR}\n\nUnexpected error: {str(e)}"
+            f"{TIKTOK_PROCESSING_ERROR}\n\nUnexpected error: {str(e)}\nYou can /cancel and try again"
         )
         return URL
 
@@ -151,7 +160,7 @@ async def handle_tags(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return TAGS
 
 
-async def finalize_tiktok_recipe(
+async def finalize_tiktok_recipe(  # noqa: PLR0912
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Finalize and save the TikTok recipe."""
@@ -173,6 +182,9 @@ async def finalize_tiktok_recipe(
                 await update.message.reply_text(
                     "Error: No recipe data found. Please start over."
                 )
+            # Clear user data to allow new conversations
+            if context.user_data:
+                context.user_data.clear()
             return ConversationHandler.END
 
         # Get user selections
@@ -186,6 +198,9 @@ async def finalize_tiktok_recipe(
                 await update.message.reply_text(
                     "Error: No category selected. Please start over."
                 )
+            # Clear user data to allow new conversations
+            if context.user_data:
+                context.user_data.clear()
             return ConversationHandler.END
 
         tags = context.user_data.get(TikTokRecipeContextKey.TAGS, [])
@@ -206,7 +221,7 @@ async def finalize_tiktok_recipe(
         )
 
         # Save to database
-        recipe_repo: RecipeRepositoryABC = context.bot_data["recipe_repo"]
+        recipe_repo: RecipeRepositoryABC = get_state(context)["recipe_repo"]
         saved_recipe = await recipe_repo.add(recipe)
 
         # Show success message with recipe details
@@ -228,6 +243,10 @@ async def finalize_tiktok_recipe(
                 reply_markup=MAIN_KEYBOARD,
             )
 
+        # Clear user data to allow new conversations
+        if context.user_data:
+            context.user_data.clear()
+
         return ConversationHandler.END
 
     except Exception as e:
@@ -236,7 +255,84 @@ async def finalize_tiktok_recipe(
             await update.callback_query.edit_message_text(error_message)
         elif not use_callback and update.message:
             await update.message.reply_text(error_message)
+
+        # Clear user data even on error
+        if context.user_data:
+            context.user_data.clear()
+
         return ConversationHandler.END
+
+
+async def handle_manual_entry_choice(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Handle user's choice when TikTok parsing fails - offer manual entry or cancel."""
+    # Create inline keyboard for user choice
+    keyboard = [
+        [InlineKeyboardButton("Fill Manually", callback_data="manual_entry")],
+        [InlineKeyboardButton("Cancel", callback_data="cancel_manual")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if update.message:
+        await update.message.reply_text(
+            TIKTOK_PROCESSING_FAILED, reply_markup=reply_markup
+        )
+    return MANUAL_ENTRY
+
+
+async def handle_manual_entry_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Handle callback from manual entry choice."""
+    query = update.callback_query
+    if not query:
+        return MANUAL_ENTRY
+
+    await query.answer()
+
+    if query.data == "manual_entry":
+        # User chose to continue with manual entry
+        # Prepare data for add_recipe conversation and instruct user to use /add
+
+        # Get the existing TikTok recipe data
+        if not context.user_data:
+            return ConversationHandler.END
+
+        parsed_recipe_data = context.user_data.pop(
+            TikTokRecipeContextKey.PARSED_RECIPE, {}
+        )
+
+        # Store TikTok data in a way that add_recipe can pick it up
+        # We'll use a special key that persists across conversations
+        context.user_data[TikTokRecipeContextKey.PENDING_TIKTOK_DATA] = {
+            "tiktok_source": parsed_recipe_data,
+            "from_tiktok": True,
+        }
+
+        # Create keyboard with button to start manual entry
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "Start Manual Recipe Entry", callback_data="start_manual_entry"
+                )
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+            TIKTOK_MANUAL_ENTRY_PROMPT,
+            reply_markup=reply_markup,
+        )
+
+        # End this conversation
+        return ConversationHandler.END
+
+    elif query.data == "cancel_manual":
+        # User chose to cancel
+        return await handle_cancel(update, context)
+
+    return MANUAL_ENTRY
 
 
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
