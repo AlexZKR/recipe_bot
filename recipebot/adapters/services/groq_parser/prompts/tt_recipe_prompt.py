@@ -3,23 +3,21 @@ from collections.abc import Iterable
 
 from groq.types.chat import ChatCompletionMessageParam
 
+from recipebot.adapters.services.groq_parser.prompts.base import BASE_SYSTEM_PROMPT
+from recipebot.adapters.services.groq_parser.prompts.ingredients import (
+    INGREDIENT_EXTRACTION_PROMPT,
+)
+from recipebot.adapters.services.groq_parser.prompts.steps import (
+    STEPS_EXTRACTION_RULES,
+)
+
 
 def get_tt_recipe_prompt(user_prompt: str) -> Iterable[ChatCompletionMessageParam]:
-    system_prompt = """
-You are a text extraction assistant. Analyze the unstructured recipe text and extract it into structured JSON.
-
-Rules:
-1. **TRANSLATE EVERYTHING TO ENGLISH.**
-2. **For 'ingredients'**: Extract `name`, `quantity`, `unit`, and `group`.
-   - `group` logic (Priority Order):
-     a) **Explicit Headers:** If the text has clear headers (e.g., "For the sauce:"), use them.
-     b) **Implicit Components:** Identify functional sub-components that are mixed in but distinct.
-        - Valid Implicit Groups: "Marinade", "Batter", "Breading", "Garnish", "Sauce", "Seasonings".
-        - **Condition:** Only create a group if 3+ ingredients clearly belong to it.
-     c) **Default / Catch-All:** EVERYTHING else must go to "Main".
-     d) **FORBIDDEN:** Do NOT create groups like "Other", "Misc", "Rest", or "Assembly". If unsure, use "Main".
-3. Infer 'estimated_time' if mentioned.
-"""
+    system_prompt = f"""
+    {BASE_SYSTEM_PROMPT}\n\n{INGREDIENT_EXTRACTION_PROMPT}\n\n{STEPS_EXTRACTION_RULES}\n
+    **Additional Rules:**
+    1. Infer 'estimated_time' and 'servings' if mentioned.
+    """
     return [
         {"role": "system", "content": system_prompt},
         # -------------------------------------------------------
@@ -48,7 +46,7 @@ Rules:
             ),
         },
         # -------------------------------------------------------
-        # FEW-SHOT 2: Implicit Components (The new "Smart" logic)
+        # FEW-SHOT 2: Implicit Components
         # -------------------------------------------------------
         # This teaches the model to spot a "Marinade" even without a header
         {

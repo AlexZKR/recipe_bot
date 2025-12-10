@@ -4,8 +4,15 @@ TITLE, INGREDIENTS, STEPS, CATEGORY, TAGS = range(5)
 # Messages
 ADD_START = "Let's add a recipe. I will ask for the required info. You can cancel at any time by typing /cancel."
 ADD_TITLE = "Provide a title for your recipe"
-ADD_INGREDIENTS = "Great! Now provide the ingredients."
-ADD_STEPS = "Awesome. Now, the steps to prepare it."
+
+ADD_INGREDIENTS = "Great! Now provide the ingredients.\nYou can paste the ingredients directly or use the keyboard to input them.\n\nYou can input in any format you like, I will understand it and parse it correctly."
+ADD_INGREDIENTS_PROCESSING = "Processing ingredients..."
+ADD_INGREDIENTS_SUCCESS = "Ingredients processed successfully."
+
+ADD_STEPS = "Awesome. Now, the steps to prepare it.\nYou can paste the steps directly or use the keyboard to input them.\n\nYou can input in any format you like, I will understand it and parse it correctly."
+ADD_STEPS_PROCESSING = "Processing steps..."
+ADD_STEPS_SUCCESS = "Steps processed successfully."
+
 ADD_CATEGORY = (
     "What category does this recipe belong to (use keyboard for range of options)?"
 )

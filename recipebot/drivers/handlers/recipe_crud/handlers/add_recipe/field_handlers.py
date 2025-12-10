@@ -4,6 +4,7 @@ from telegram import (
 )
 from telegram.ext import ContextTypes, ConversationHandler
 
+from recipebot.adapters.services.groq_parser.recipe_parser import GroqRecipeParser
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import (
@@ -11,7 +12,11 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
     ADD_CATEGORY,
     ADD_CATEGORY_INVALID,
     ADD_INGREDIENTS,
+    ADD_INGREDIENTS_PROCESSING,
+    ADD_INGREDIENTS_SUCCESS,
     ADD_STEPS,
+    ADD_STEPS_PROCESSING,
+    ADD_STEPS_SUCCESS,
     ADD_TAGS_DONE,
     CATEGORY,
     INGREDIENTS,
@@ -43,7 +48,13 @@ async def handle_ingredients(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not update.message or not context.user_data:
         raise Exception("Something went wrong")
 
-    context.user_data["ingredients"] = update.message.text
+    await update.message.reply_text(ADD_INGREDIENTS_PROCESSING)
+
+    recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
+    ingredients = await recipe_parser.parse_ingredients(update.message.text or "")
+    context.user_data["ingredients"] = [i.model_dump() for i in ingredients]
+    await update.message.reply_text(ADD_INGREDIENTS_SUCCESS)
+
     await update.message.reply_text(ADD_STEPS)
 
     return STEPS
@@ -54,7 +65,14 @@ async def handle_steps(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     if not update.message or not context.user_data:
         raise Exception("Something went wrong")
 
-    context.user_data["steps"] = update.message.text
+    await update.message.reply_text(ADD_STEPS_PROCESSING)
+
+    recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
+    steps = await recipe_parser.parse_steps(update.message.text or "")
+    context.user_data["steps"] = steps
+
+    await update.message.reply_text(ADD_STEPS_SUCCESS)
+
     await update.message.reply_text(
         ADD_CATEGORY,
         reply_markup=create_category_reply_keyboard(),

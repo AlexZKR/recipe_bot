@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from recipebot.adapters.services.groq_tt_parser.tt_recipe_parser import (
-    GroqTTRecipeParser,
+from recipebot.adapters.services.groq_parser.recipe_parser import (
+    GroqRecipeParser,
 )
 from recipebot.adapters.services.tt_resolver import HttpxTTResolver, TTResolverABC
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory, RecipeDTO
@@ -33,6 +33,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.handler_context
 from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
     create_category_reply_keyboard,
 )
+from recipebot.drivers.state import get_state
 from recipebot.infra.transport.httpx_transport import init_transport
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 from recipebot.ports.services.tt_resolver.exceptions import (
@@ -66,7 +67,7 @@ async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # Get dependencies from bot data
         async with init_transport() as transport:
             tt_resolver: TTResolverABC = HttpxTTResolver(transport)
-            recipe_parser = GroqTTRecipeParser(context.bot_data["groq_client"])
+            recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
             task = RecipeFromTTTask(
                 tt_resolver=tt_resolver,
                 recipe_parser=recipe_parser,
@@ -220,7 +221,7 @@ async def finalize_tiktok_recipe(  # noqa: PLR0912
         )
 
         # Save to database
-        recipe_repo: RecipeRepositoryABC = context.bot_data["recipe_repo"]
+        recipe_repo: RecipeRepositoryABC = get_state(context)["recipe_repo"]
         saved_recipe = await recipe_repo.add(recipe)
 
         # Show success message with recipe details
