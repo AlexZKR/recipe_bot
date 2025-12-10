@@ -45,7 +45,7 @@ async def _show_search_results(
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     recipes = await recipe_repo.search_by_tags(update.effective_user.id, search_tags)
 
     if not recipes:
@@ -111,7 +111,7 @@ async def handle_search_result(update: Update, context: ContextTypes.DEFAULT_TYP
     recipe_id = query.data[14:]  # Remove "search_result_" prefix
 
     # Get recipe details
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     try:
         recipe = await recipe_repo.get(UUID(recipe_id))
     except RecipeNotFound:
@@ -170,7 +170,7 @@ async def _show_tag_selection(
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     tags = await recipe_repo.get_user_tags(update.effective_user.id)
 
     if not tags:

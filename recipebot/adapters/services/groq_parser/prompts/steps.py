@@ -16,7 +16,7 @@ STEPS_EXTRACTION_RULES = """
 5. Do NOT number the strings inside the list.
 """
 
-STEPS_FEW_SHOTS = [
+STEPS_FEW_SHOTS: list[ChatCompletionMessageParam] = [
     # -------------------------------------------------------
     # FEW-SHOT 1: Simple Baseline
     # -------------------------------------------------------

@@ -50,7 +50,7 @@ async def handle_ingredients(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     await update.message.reply_text(ADD_INGREDIENTS_PROCESSING)
 
-    recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
+    recipe_parser = GroqRecipeParser(get_state()["groq_client"])
     ingredients = await recipe_parser.parse_ingredients(update.message.text or "")
     context.user_data["ingredients"] = [i.model_dump() for i in ingredients]
     await update.message.reply_text(ADD_INGREDIENTS_SUCCESS)
@@ -67,7 +67,7 @@ async def handle_steps(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
     await update.message.reply_text(ADD_STEPS_PROCESSING)
 
-    recipe_parser = GroqRecipeParser(get_state(context)["groq_client"])
+    recipe_parser = GroqRecipeParser(get_state()["groq_client"])
     steps = await recipe_parser.parse_steps(update.message.text or "")
     context.user_data["steps"] = steps
 
@@ -154,7 +154,7 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         link = tiktok_data.get("link")
 
     # Save the recipe to the database
-    recipe_repo = get_state(context)["recipe_repo"]
+    recipe_repo = get_state()["recipe_repo"]
     recipe = Recipe(
         title=context.user_data["title"],
         ingredients=context.user_data["ingredients"],
