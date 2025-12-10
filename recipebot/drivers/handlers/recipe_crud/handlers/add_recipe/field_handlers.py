@@ -228,6 +228,7 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     context.user_data.clear()
+    return ConversationHandler.END
 
 
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

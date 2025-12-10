@@ -46,10 +46,10 @@ async def global_handle_tag_callbacks(
         # Determine which finalization function to call based on context
         if TikTokRecipeContextKey.PARSED_RECIPE in context.user_data:
             # TikTok recipe creation
-            await finalize_tiktok_recipe(update, context)
+            return await finalize_tiktok_recipe(update, context)
         else:
             # Regular recipe creation
-            await finalize_recipe(update, context)
+            return await finalize_recipe(update, context)
     elif callback_data.startswith("tag_"):
         tag_name = callback_data[4:]  # Remove "tag_" prefix
         try:
