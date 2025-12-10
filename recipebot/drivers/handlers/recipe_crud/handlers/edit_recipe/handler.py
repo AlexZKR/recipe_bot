@@ -13,6 +13,7 @@ from telegram.ext import (
 from telegram.warnings import PTBUserWarning
 
 from recipebot.domain.recipe.recipe import RecipeCategory
+from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
     EDIT_CATEGORY_MIN_PARTS,
@@ -343,7 +344,7 @@ edit_field_conversation = ConversationHandler(
         EDITING_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_notes)],
         EDITING_LINK: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_link)],
     },
-    fallbacks=[CommandHandler("cancel", cancel_edit)],
+    fallbacks=[CommandHandler("cancel", cancel_edit), basic_fallback_handler],
     persistent=True,
     per_message=False,
     conversation_timeout=300,  # 5 minutes timeout

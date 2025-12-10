@@ -9,6 +9,7 @@ from telegram.ext import (
 )
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
+from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.constants import (
     CATEGORY,
     MANUAL_ENTRY,
@@ -55,7 +56,7 @@ from_tiktok_handler = ConversationHandler(
         ],
         SAVE: [],  # This state is handled internally
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel)],
+    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],
     persistent=True,
     name="from_tiktok_conversation",
 )
