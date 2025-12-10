@@ -4,6 +4,7 @@ from logging import getLogger
 from typing import Any
 
 from httpx import AsyncClient, HTTPStatusError, Request, Response
+from pydantic import AnyHttpUrl
 
 from recipebot.config.config import HTTPTransportSettings
 from recipebot.infra.transport.base import AbstractAsyncHTTPTransport, ResponseMetadata
@@ -38,7 +39,7 @@ class HttpxHTTPTransport(AbstractAsyncHTTPTransport):
         response = await self._make_request(data)
 
         # Handle redirects manually to capture Location header
-        redirect_chain = [str(response.url)]
+        redirect_chain: list[AnyHttpUrl] = [AnyHttpUrl(str(response.url))]
 
         # If this is a redirect response (3xx), follow it manually
         is_redirect = (
@@ -46,7 +47,7 @@ class HttpxHTTPTransport(AbstractAsyncHTTPTransport):
         )
         if is_redirect and "location" in response.headers:
             location = response.headers["location"]
-            redirect_chain.append(location)
+            redirect_chain.append(AnyHttpUrl(location))
 
             # Create a new request to the redirect location
             redirect_data = HTTPRequestData(
@@ -61,7 +62,7 @@ class HttpxHTTPTransport(AbstractAsyncHTTPTransport):
 
         # Create response metadata
         metadata = ResponseMetadata(
-            final_url=str(response.url),
+            final_url=AnyHttpUrl(str(response.url)),
             status_code=response.status_code,
             headers=dict(response.headers),
             content_type=response.headers.get("content-type"),

@@ -1,13 +1,6 @@
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel
-
-
-class ResolutionResult(BaseModel):
-    """Result of TikTok URL resolution."""
-
-    description: str
-    source_url: str
+from recipebot.ports.services.tt_resolver.schemas import ResolutionResult
 
 
 class TTResolverABC(ABC):

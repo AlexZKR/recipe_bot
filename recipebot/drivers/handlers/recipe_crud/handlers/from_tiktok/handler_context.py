@@ -8,5 +8,6 @@ class TikTokRecipeContextKey(StrEnum):
 
     TIKTOK_URL = "tiktok_url"
     PARSED_RECIPE = "parsed_recipe"
+    PENDING_TIKTOK_DATA = "pending_tiktok_data"
     CATEGORY = "category"
     TAGS = "tags"
