@@ -134,4 +134,6 @@ list_recipes_handler = CommandHandler("list", list_recipes)
 recipe_selection_handler = CallbackQueryHandler(
     handle_recipe_selection, pattern=r"^recipe_"
 )
-pagination_handler = CallbackQueryHandler(handle_pagination, pattern=r"^list_page_")
+list_pagination_handler = CallbackQueryHandler(
+    handle_pagination, pattern=r"^list_page_"
+)

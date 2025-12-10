@@ -1,11 +1,11 @@
 from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes.handler import (
+    list_pagination_handler,
     list_recipes_handler,
-    pagination_handler,
     recipe_selection_handler,
 )
 
 __all__ = [
     "list_recipes_handler",
     "recipe_selection_handler",
-    "pagination_handler",
+    "list_pagination_handler",
 ]
