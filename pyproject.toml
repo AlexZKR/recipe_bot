@@ -9,7 +9,7 @@ description = "Recipe Telegram Bot that allows to add recipes and generate menus
 readme = "README.md"
 requires-python = ">=3.13.7"
 dynamic = ["dependencies", "optional-dependencies"]
-version = "1.0.2"
+version = "1.1.0"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
