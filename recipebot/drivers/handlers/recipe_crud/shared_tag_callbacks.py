@@ -53,7 +53,7 @@ async def global_handle_tag_callbacks(
     elif callback_data.startswith("tag_"):
         tag_name = callback_data[4:]  # Remove "tag_" prefix
         try:
-            await add_tag_to_recipe(context, tag_name)
+            add_tag_to_recipe(context, tag_name)
             await show_tags_keyboard(update, context)
         except Exception as e:
             await query.edit_message_text(f"Error adding tag: {e}")
