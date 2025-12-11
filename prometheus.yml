@@ -7,5 +7,5 @@ scrape_configs:
     static_configs:
       - targets: ["recipe_bot:8080"]
     basic_auth:
-      username: "admin"
-      password: "secure_password_123"
+      username: "metrics_user"
+      password: "metrics_pass"

@@ -57,6 +57,8 @@ class AppSettings(BaseSettings):
     )
     env: AppEnvironment = AppEnvironment.DEV
     recipe_page_size: int = 5
+    metrics_user: str = "metrics_user"
+    metrics_pass: SecretStr = SecretStr("metrics_pass")
 
 
 class GroqSettings(BaseSettings):

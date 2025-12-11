@@ -6,6 +6,10 @@ services:
     volumes:
       - ./recipebot:/app/recipebot
     command: python -m recipebot.drivers.main
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
     env_file:
       - path: .env.example
         required: true
