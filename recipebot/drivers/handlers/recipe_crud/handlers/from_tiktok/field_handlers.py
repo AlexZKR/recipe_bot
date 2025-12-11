@@ -35,6 +35,7 @@ from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
 )
 from recipebot.drivers.state import get_state
 from recipebot.infra.transport.httpx_transport import init_transport
+from recipebot.metrics.recipes import RECIPES_CREATED, RecipeCreationSourceEnum
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 from recipebot.ports.services.tt_resolver.exceptions import (
     InvalidTikTokURL,
@@ -223,6 +224,9 @@ async def finalize_tiktok_recipe(  # noqa: PLR0912
         # Save to database
         recipe_repo: RecipeRepositoryABC = get_state()["recipe_repo"]
         saved_recipe = await recipe_repo.add(recipe)
+
+        # instrumentation
+        RECIPES_CREATED.labels(source=RecipeCreationSourceEnum.TIKTOK_AUTO).inc()
 
         # Show success message with recipe details
         success_message = f"{TIKTOK_SAVE_SUCCESS}\n\n{saved_recipe.to_md()}"

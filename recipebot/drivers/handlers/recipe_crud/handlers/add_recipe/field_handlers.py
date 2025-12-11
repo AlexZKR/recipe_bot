@@ -30,6 +30,7 @@ from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
     create_category_reply_keyboard,
 )
 from recipebot.drivers.state import get_state
+from recipebot.metrics.recipes import RECIPES_CREATED, RecipeCreationSourceEnum
 
 
 async def handle_title(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -167,6 +168,12 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         link=link,
     )
     await recipe_repo.add(recipe)
+
+    # instrumentation
+    if context.user_data.get("from_tiktok"):
+        RECIPES_CREATED.labels(source=RecipeCreationSourceEnum.TIKTOK_MANUAL).inc()
+    else:
+        RECIPES_CREATED.labels(source=RecipeCreationSourceEnum.MANUAL).inc()
 
     # Display the newly added recipe
     if update.effective_chat:
