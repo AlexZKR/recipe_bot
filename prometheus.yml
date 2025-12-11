@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "recipe_bot"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["recipe_bot:8080"]
+    basic_auth:
+      username: "metrics_user"
+      password: "metrics_pass"

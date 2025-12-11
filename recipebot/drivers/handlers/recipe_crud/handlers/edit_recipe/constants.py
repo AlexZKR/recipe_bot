@@ -30,3 +30,6 @@ EDITABLE_FIELDS = [
     "notes",
     "link",
 ]
+
+EDIT_CANCEL = "Edit cancelled."
+NO_RECIPES = "You don't have any recipes yet"

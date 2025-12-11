@@ -2,15 +2,28 @@
 URL, PROCESSING, CATEGORY, TAGS, SAVE, MANUAL_ENTRY = range(6)
 
 # Messages
-TIKTOK_START = "Let's create a recipe from TikTok! Please paste the TikTok share URL (e.g., https://vm.tiktok.com/xxxxx/)"
+TIKTOK_START = (
+    "Let's create a recipe from TikTok! Please paste the TikTok share URL "
+    "(e.g., https://vm.tiktok.com/xxxxx/)\n\n"
+    "Remember, you can use /cancel to cancel the process at any time."
+)
 TIKTOK_URL_INVALID = "That doesn't look like a valid TikTok URL. Please try again with a TikTok share URL."
 
 TIKTOK_PROCESSING = "🔄 Processing your TikTok video... This may take a moment."
 TIKTOK_PROCESSING_SUCCESS = "✅ Successfully extracted recipe from TikTok!"
 TIKTOK_PROCESSING_ERROR = "❌ Sorry, I couldn't extract a recipe from that TikTok URL. Please check the URL and try again."
-TIKTOK_PROCESSING_FAILED = "❌ Sorry, I couldn't extract a complete recipe from that TikTok URL. The source link has been saved.\n\nChoose an option:\n• Type 'manual' to fill in the recipe details manually (I will help you!)\n• Type /cancel to cancel"
+TIKTOK_PROCESSING_FAILED = (
+    "❌ Sorry, I couldn't extract a complete recipe from that TikTok URL. "
+    "The source link has been saved.\n\n"
+    "Choose an option:\n"
+    "• Type 'manual' to fill in the recipe details manually (I will help you!)\n"
+    "• Type /cancel to cancel"
+)
 
-TIKTOK_MANUAL_ENTRY_PROMPT = "Great! Let's fill in the recipe details manually. The source link has been saved.\n\nClick the button below to start entering your recipe:"
+TIKTOK_MANUAL_ENTRY_PROMPT = (
+    "Great! Let's fill in the recipe details manually. The source link has been saved.\n\n"
+    "Click the button below to start entering your recipe:"
+)
 TIKTOK_CATEGORY = (
     "What category does this recipe belong to (use keyboard for range of options)?"
 )

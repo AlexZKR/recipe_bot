@@ -9,18 +9,21 @@ from telegram.ext import (
 )
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
-from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
+from recipebot.drivers.handlers.basic_fallback import (
+    basic_fallback_handler,
+    get_cancel_handler,
+)
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.constants import (
     CATEGORY,
     MANUAL_ENTRY,
     PROCESSING,
     SAVE,
     TAGS,
+    TIKTOK_CANCEL,
     TIKTOK_START,
     URL,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.field_handlers import (
-    handle_cancel,
     handle_category,
     handle_manual_entry_callback,
     handle_tags,
@@ -60,7 +63,10 @@ from_tiktok_handler = ConversationHandler(
         ],
         SAVE: [],  # This state is handled internally
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],  # type: ignore[list-item]
+    fallbacks=[
+        CommandHandler("cancel", get_cancel_handler(TIKTOK_CANCEL)),
+        basic_fallback_handler,  # type: ignore[list-item]
+    ],
     persistent=True,
     name="from_tiktok_conversation",
 )

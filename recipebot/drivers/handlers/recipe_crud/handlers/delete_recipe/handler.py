@@ -4,6 +4,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler_context import (
     DeleteRecipeContextKey,
@@ -24,6 +25,7 @@ from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 
 
+@only_registered
 async def delete_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await _show_delete_recipe_list(update, context, page=1)
 
@@ -44,12 +46,12 @@ async def _show_delete_recipe_list(
     if not recipes:
         if edit_message and update.callback_query:
             await update.callback_query.edit_message_text(
-                "You don't have any recipes yet. Use /add to create your first recipe!"
+                "You don't have any recipes yet. "
             )
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="You don't have any recipes yet. Use /add to create your first recipe!",
+                text="You don't have any recipes yet.",
             )
         return
 
@@ -64,9 +66,7 @@ async def _show_delete_recipe_list(
         paginated_result, item_callback_factory, navigation_prefix="delete_page"
     )
 
-    message_text = (
-        f"Select a recipe to delete:\n\n{paginated_result.get_page_info_text()}"
-    )
+    message_text = f"Select a recipe to delete:\n\n{paginated_result.get_page_info_text()}\n\nOr use main keyboard below."
 
     if edit_message and update.callback_query:
         await update.callback_query.edit_message_text(

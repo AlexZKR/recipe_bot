@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Update,
+)
 from telegram.ext import ContextTypes, ConversationHandler
 
 from recipebot.adapters.services.groq_parser.recipe_parser import (
@@ -8,7 +12,7 @@ from recipebot.adapters.services.groq_parser.recipe_parser import (
 )
 from recipebot.adapters.services.tt_resolver import HttpxTTResolver, TTResolverABC
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory, RecipeDTO
-from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
+from recipebot.drivers.handlers.basic_fallback import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers import (
     add_tag_to_recipe,
     show_tags_keyboard,
@@ -35,6 +39,7 @@ from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
 )
 from recipebot.drivers.state import get_state
 from recipebot.infra.transport.httpx_transport import init_transport
+from recipebot.metrics.recipes import RECIPES_CREATED, RecipeCreationSourceEnum
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
 from recipebot.ports.services.tt_resolver.exceptions import (
     InvalidTikTokURL,
@@ -224,6 +229,9 @@ async def finalize_tiktok_recipe(  # noqa: PLR0912
         recipe_repo: RecipeRepositoryABC = get_state()["recipe_repo"]
         saved_recipe = await recipe_repo.add(recipe)
 
+        # instrumentation
+        RECIPES_CREATED.labels(source=RecipeCreationSourceEnum.TIKTOK_AUTO).inc()
+
         # Show success message with recipe details
         success_message = f"{TIKTOK_SAVE_SUCCESS}\n\n{saved_recipe.to_md()}"
         if use_callback and update.callback_query and update.callback_query.message:
@@ -338,7 +346,7 @@ async def handle_manual_entry_callback(
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels and ends the conversation."""
     if update.message:
-        await update.message.reply_text(TIKTOK_CANCEL)
+        await update.message.reply_text(TIKTOK_CANCEL, reply_markup=MAIN_KEYBOARD)
     elif update.callback_query:
         await update.callback_query.edit_message_text(TIKTOK_CANCEL)
 

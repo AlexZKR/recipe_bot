@@ -9,20 +9,26 @@ from telegram.ext import (
 )
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
-from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
+from recipebot.drivers.handlers.basic_fallback import (
+    basic_fallback_handler,
+    get_cancel_handler,
+)
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import (
+    ADD_CANCEL,
     ADD_START,
     ADD_TITLE,
     CATEGORY,
     INGREDIENTS,
+    LINK,
     STEPS,
     TAGS,
     TITLE,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers import (
-    handle_cancel,
     handle_category,
     handle_ingredients,
+    handle_skip_link,
+    handle_source_link,
     handle_steps,
     handle_tags,
     handle_title,
@@ -96,12 +102,19 @@ add_recipe_handler = ConversationHandler(
         ],
         STEPS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_steps)],
         CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_category)],
+        LINK: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_source_link),
+            CommandHandler("skip", handle_skip_link),
+        ],
         TAGS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tags),
             global_tag_callback_handler,
         ],
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],  # type: ignore[list-item]
+    fallbacks=[
+        CommandHandler("cancel", get_cancel_handler(ADD_CANCEL)),
+        basic_fallback_handler,  # type: ignore[list-item]
+    ],
     persistent=True,
     name="add_recipe_conversation",
 )
