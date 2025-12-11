@@ -156,7 +156,7 @@ async def handle_tags(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         # Handle new tag input
         tag_name = update.message.text.strip()
         if tag_name:
-            await add_tag_to_recipe(context, tag_name)
+            add_tag_to_recipe(context, tag_name)
         await show_tags_keyboard(update, context)
         return TAGS
 
