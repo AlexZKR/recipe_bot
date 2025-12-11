@@ -1,9 +1,21 @@
 # Conversation states for recipe creation
-TITLE, INGREDIENTS, STEPS, CATEGORY, TAGS = range(5)
+TITLE, INGREDIENTS, STEPS, CATEGORY, LINK, TAGS = range(6)
 
 # Messages
 ADD_START = "Let's add a recipe. I will ask for the required info. You can cancel at any time by typing /cancel."
 ADD_TITLE = "Provide a title for your recipe"
+
+
+ADD_LINK = (
+    "Provide a URL for the source link of the recipe.\n\n"
+    "This is an optional step, you can skip it with /skip.\n\n"
+    "You can use /cancel to cancel the process at any time."
+)
+ADD_LINK_INVALID = (
+    "Please provide a valid URL for the source link.\n\nOr you can skip it with /skip."
+)
+ADD_LINK_ADDED = "Source link added."
+ADD_LINK_SKIP = "Source link skipped."
 
 ADD_INGREDIENTS = (
     "Great! Now provide the ingredients.\n"

@@ -19,6 +19,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
     ADD_TITLE,
     CATEGORY,
     INGREDIENTS,
+    LINK,
     STEPS,
     TAGS,
     TITLE,
@@ -26,6 +27,8 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers import (
     handle_category,
     handle_ingredients,
+    handle_skip_link,
+    handle_source_link,
     handle_steps,
     handle_tags,
     handle_title,
@@ -99,6 +102,10 @@ add_recipe_handler = ConversationHandler(
         ],
         STEPS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_steps)],
         CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_category)],
+        LINK: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_source_link),
+            CommandHandler("skip", handle_skip_link),
+        ],
         TAGS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tags),
             global_tag_callback_handler,

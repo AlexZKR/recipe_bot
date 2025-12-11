@@ -12,17 +12,26 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
     ADD_INGREDIENTS,
     ADD_INGREDIENTS_PROCESSING,
     ADD_INGREDIENTS_SUCCESS,
+    ADD_LINK,
+    ADD_LINK_ADDED,
+    ADD_LINK_INVALID,
+    ADD_LINK_SKIP,
     ADD_STEPS,
     ADD_STEPS_PROCESSING,
     ADD_STEPS_SUCCESS,
     ADD_TAGS_DONE,
     CATEGORY,
     INGREDIENTS,
+    LINK,
     STEPS,
     TAGS,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.layout import (
     show_tags_keyboard,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.utils import (
+    add_tag_to_recipe,
+    validate_source_link,
 )
 from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
     create_category_reply_keyboard,
@@ -101,9 +110,41 @@ async def handle_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Valid category, proceed to tags step
     context.user_data["category"] = user_input
 
+    await update.message.reply_text(ADD_LINK)
+
+    return LINK
+
+
+async def handle_source_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the source link and asks for the tags."""
+    if not update.message or not update.message.text or not context.user_data:
+        raise Exception("Something went wrong")
+
+    if not validate_source_link(update.message.text):
+        await update.message.reply_text(
+            ADD_LINK_INVALID,
+        )
+        return LINK
+
+    context.user_data["source_link"] = update.message.text
+
+    await update.message.reply_text(ADD_LINK_ADDED)
+
     # Show tags selection (message will be sent by show_tags_keyboard)
     await show_tags_keyboard(update, context)
+    return TAGS
 
+
+async def handle_skip_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Skips the source link step and moves to tags selection."""
+    if not update.message or not context.user_data:
+        raise Exception("Something went wrong")
+
+    # Don't set source_link, leaving it as None (skipped)
+    await update.message.reply_text(ADD_LINK_SKIP)
+
+    # Show tags selection (message will be sent by show_tags_keyboard)
+    await show_tags_keyboard(update, context)
     return TAGS
 
 
@@ -126,17 +167,6 @@ async def handle_tags(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return TAGS
 
 
-async def add_tag_to_recipe(context: ContextTypes.DEFAULT_TYPE, tag_name: str):
-    """Add a tag to the current recipe being created."""
-    if not context.user_data:
-        return
-
-    current_tags = context.user_data.get("tags", [])
-    if tag_name not in current_tags:
-        current_tags.append(tag_name)
-        context.user_data["tags"] = current_tags
-
-
 async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Save the recipe with tags to the database."""
     if not update.effective_user or not context.user_data:
@@ -145,9 +175,8 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get tags from context (already as tag names)
     tag_names = context.user_data.get("tags", [])
 
+    link = context.user_data.get("source_link")
     # Check for TikTok source data
-    link = None
-
     if context.user_data.get("from_tiktok"):
         tiktok_data = context.user_data.get("tiktok_source", {})
         link = tiktok_data.get("link")
