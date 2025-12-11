@@ -1,5 +1,7 @@
 from telegram import Update
-from telegram.ext import ContextTypes, MessageHandler, filters
+from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filters
+
+from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 
 
 async def handle_unknown_command(
@@ -15,4 +17,25 @@ async def handle_unknown_command(
     )
 
 
+async def handle_cancel(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cancel_msg: str
+) -> int:
+    """Cancels and ends the conversation."""
+    if context.user_data is None:
+        raise Exception("Something went wrong")
+    if not update.message:
+        raise Exception("No message in the update")
+
+    await update.message.reply_text(cancel_msg, reply_markup=MAIN_KEYBOARD)
+    context.user_data.clear()
+    return ConversationHandler.END
+
+
 basic_fallback_handler = MessageHandler(filters.TEXT, handle_unknown_command)
+
+
+def get_cancel_handler(cancel_msg: str):
+    async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        return await handle_cancel(update, context, cancel_msg)
+
+    return cancel_handler

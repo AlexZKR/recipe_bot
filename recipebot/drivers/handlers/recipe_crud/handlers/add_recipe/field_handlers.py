@@ -1,5 +1,4 @@
 from telegram import (
-    ReplyKeyboardRemove,
     Update,
 )
 from telegram.ext import ContextTypes, ConversationHandler
@@ -8,7 +7,6 @@ from recipebot.adapters.services.groq_parser.recipe_parser import GroqRecipePars
 from recipebot.domain.recipe.recipe import Recipe, RecipeCategory
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import (
-    ADD_CANCEL,
     ADD_CATEGORY,
     ADD_CATEGORY_INVALID,
     ADD_INGREDIENTS,
@@ -193,17 +191,5 @@ async def finalize_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=MAIN_KEYBOARD,
         )
 
-    context.user_data.clear()
-    return ConversationHandler.END
-
-
-async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancels and ends the conversation."""
-    if not context.user_data:
-        raise Exception("Something went wrong")
-    if not update.message:
-        raise Exception("No message in the update")
-
-    await update.message.reply_text(ADD_CANCEL, reply_markup=ReplyKeyboardRemove())
     context.user_data.clear()
     return ConversationHandler.END

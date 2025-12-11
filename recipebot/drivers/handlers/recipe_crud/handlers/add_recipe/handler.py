@@ -9,8 +9,12 @@ from telegram.ext import (
 )
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
-from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
+from recipebot.drivers.handlers.basic_fallback import (
+    basic_fallback_handler,
+    get_cancel_handler,
+)
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import (
+    ADD_CANCEL,
     ADD_START,
     ADD_TITLE,
     CATEGORY,
@@ -20,7 +24,6 @@ from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.constants import
     TITLE,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.add_recipe.field_handlers import (
-    handle_cancel,
     handle_category,
     handle_ingredients,
     handle_steps,
@@ -101,7 +104,10 @@ add_recipe_handler = ConversationHandler(
             global_tag_callback_handler,
         ],
     },
-    fallbacks=[CommandHandler("cancel", handle_cancel), basic_fallback_handler],  # type: ignore[list-item]
+    fallbacks=[
+        CommandHandler("cancel", get_cancel_handler(ADD_CANCEL)),
+        basic_fallback_handler,  # type: ignore[list-item]
+    ],
     persistent=True,
     name="add_recipe_conversation",
 )
