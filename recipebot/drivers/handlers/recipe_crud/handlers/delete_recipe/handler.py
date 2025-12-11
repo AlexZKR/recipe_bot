@@ -4,6 +4,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler_context import (
     DeleteRecipeContextKey,
@@ -24,6 +25,7 @@ from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 
 
+@only_registered
 async def delete_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await _show_delete_recipe_list(update, context, page=1)
 

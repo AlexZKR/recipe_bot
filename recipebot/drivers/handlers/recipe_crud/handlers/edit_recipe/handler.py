@@ -13,6 +13,7 @@ from telegram.ext import (
 from telegram.warnings import PTBUserWarning
 
 from recipebot.domain.recipe.recipe import RecipeCategory
+from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.basic_fallback import (
     basic_fallback_handler,
     get_cancel_handler,
@@ -67,6 +68,7 @@ filterwarnings(
 )
 
 
+@only_registered
 async def update_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start the recipe update process by showing paginated recipe selection."""
     await _show_edit_recipe_list(update, context, page=1)

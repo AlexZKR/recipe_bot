@@ -1,9 +1,12 @@
 import urllib.parse
+from logging import getLogger
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from recipebot.config.enums import AppEnvironment
+
+logger = getLogger(__name__)
 
 
 class TelegramBotSettings(BaseSettings):
@@ -57,8 +60,27 @@ class AppSettings(BaseSettings):
     )
     env: AppEnvironment = AppEnvironment.DEV
     recipe_page_size: int = 5
+
     metrics_user: str = "metrics_user"
     metrics_pass: SecretStr = SecretStr("metrics_pass")
+
+    testers_list: str = ""
+
+    @property
+    def tester_ids(self) -> list[int]:
+        """Parses the comma-separated string of IDs into a list of integers.
+
+        Example: "12345678, 987654321, 112233445"
+        """
+        if not self.testers_list:
+            return []
+        try:
+            return [int(uid.strip()) for uid in self.testers_list.split(",")]
+        except ValueError:
+            logger.error(
+                "Failed to parse tester IDs. Ensure they are comma-separated integers."
+            )
+            return []
 
 
 class GroqSettings(BaseSettings):

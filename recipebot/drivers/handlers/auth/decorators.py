@@ -1,7 +1,7 @@
 from functools import wraps
 from logging import getLogger
 
-from telegram import Update
+from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
 from recipebot.drivers.state import get_state
@@ -25,6 +25,7 @@ def only_registered(func):
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=MSG_NOT_REGISTERED,
+                    reply_markup=ReplyKeyboardRemove(),
                 )
             logger.error(MSG_NOT_REGISTERED)
         except Exception as exc:
