@@ -6,6 +6,10 @@ services:
     volumes:
       - ./recipebot:/app/recipebot
     command: python -m recipebot.drivers.main
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
     env_file:
       - path: .env.example
         required: true
@@ -13,13 +17,33 @@ services:
         required: false
     networks:
       - recipe_default
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_recipe_bot_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - recipe_default
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_recipe_bot_data:/var/lib/grafana
+    ports:
+      - "3050:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - recipe_default
     depends_on:
-      postgres_recipe:
-        condition: service_healthy
+      - prometheus
 
 networks:
   recipe_default:
 
 volumes:
-  pg_recipe_data:
-  pgadmin_recipe_data:
+  prometheus_recipe_bot_data:
+  grafana_recipe_bot_data:

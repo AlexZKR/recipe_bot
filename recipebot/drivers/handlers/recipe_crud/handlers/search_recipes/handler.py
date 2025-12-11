@@ -3,6 +3,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.shared import (
     PaginatedResult,
@@ -13,6 +14,7 @@ from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 
 
+@only_registered
 async def search_recipes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start recipe search by showing available tags."""
     if not update.effective_chat or not update.effective_user:

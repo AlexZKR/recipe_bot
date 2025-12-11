@@ -13,9 +13,14 @@ from telegram.ext import (
 from telegram.warnings import PTBUserWarning
 
 from recipebot.domain.recipe.recipe import RecipeCategory
-from recipebot.drivers.handlers.basic_fallback import basic_fallback_handler
+from recipebot.drivers.handlers.auth.decorators import only_registered
+from recipebot.drivers.handlers.basic_fallback import (
+    basic_fallback_handler,
+    get_cancel_handler,
+)
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants import (
+    EDIT_CANCEL,
     EDIT_CATEGORY_MIN_PARTS,
     EDITING_DESCRIPTION,
     EDITING_INGREDIENTS,
@@ -25,6 +30,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.constants impor
     EDITING_STEPS,
     EDITING_TIME,
     EDITING_TITLE,
+    NO_RECIPES,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.edit_recipe.field_handlers import (
     save_description,
@@ -62,6 +68,7 @@ filterwarnings(
 )
 
 
+@only_registered
 async def update_recipe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start the recipe update process by showing paginated recipe selection."""
     await _show_edit_recipe_list(update, context, page=1)
@@ -81,9 +88,7 @@ async def _show_edit_recipe_list(
     recipes = await recipe_repo.list_by_user(update.effective_user.id)
 
     if not recipes:
-        message = (
-            "You don't have any recipes yet. Use /add to create your first recipe!"
-        )
+        message = NO_RECIPES
         if edit_message and update.callback_query:
             await update.callback_query.edit_message_text(message)
         else:
@@ -104,9 +109,7 @@ async def _show_edit_recipe_list(
         paginated_result, item_callback_factory, navigation_prefix="edit_page"
     )
 
-    message_text = (
-        f"Select a recipe to edit:\n\n{paginated_result.get_page_info_text()}"
-    )
+    message_text = f"Select a recipe to edit:\n\n{paginated_result.get_page_info_text()}\n\nYou can use /cancel to cancel the process at any time."
 
     if edit_message and update.callback_query:
         await update.callback_query.edit_message_text(
@@ -200,9 +203,6 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
         return
 
     recipe_id, field_name = parsed
-    print(
-        f"DEBUG: handle_field_selection parsed: recipe_id='{recipe_id}', field_name='{field_name}'"
-    )  # Debug
 
     # Get recipe from user context (already fetched in previous step)
     if context.user_data is None:
@@ -232,19 +232,7 @@ async def handle_field_selection(update: Update, context: ContextTypes.DEFAULT_T
 
     # Start the editing conversation and return the appropriate state
     result_state = start_field_editing(context, recipe_id, field_name)
-    print(f"DEBUG: handle_field_selection returning state: {result_state}")  # Debug
     return result_state
-
-
-async def cancel_edit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Cancel the editing process."""
-    if not update.message:
-        return ConversationHandler.END
-
-    await update.message.reply_text("Edit cancelled.", reply_markup=MAIN_KEYBOARD)
-    if context.user_data:
-        context.user_data.clear()
-    return ConversationHandler.END
 
 
 # Handlers
@@ -344,7 +332,10 @@ edit_field_conversation = ConversationHandler(
         EDITING_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_notes)],
         EDITING_LINK: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_link)],
     },
-    fallbacks=[CommandHandler("cancel", cancel_edit), basic_fallback_handler],  # type: ignore[list-item]
+    fallbacks=[
+        CommandHandler("cancel", get_cancel_handler(EDIT_CANCEL)),  # type: ignore[list-item]
+        basic_fallback_handler,  # type: ignore[list-item]
+    ],
     persistent=True,
     per_message=False,
     conversation_timeout=300,  # 5 minutes timeout

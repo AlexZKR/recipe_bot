@@ -5,5 +5,6 @@ asyncpg
 beautifulsoup4
 httpx
 groq
+prometheus-client
 
 -r requirements-dev.txt
