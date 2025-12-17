@@ -65,6 +65,8 @@ class AppSettings(BaseSettings):
     metrics_pass: SecretStr = SecretStr("metrics_pass")
 
     testers_list: str = ""
+    logging_level: str = "INFO"
+    json_logging: bool = True
 
     @property
     def tester_ids(self) -> list[int]:

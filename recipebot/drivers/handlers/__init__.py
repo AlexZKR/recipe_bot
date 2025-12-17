@@ -39,6 +39,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
 from recipebot.drivers.handlers.recipe_crud.shared_tag_callbacks import (
     global_tag_callback_handler,
 )
+from recipebot.drivers.middleware import logging_middleware_handler
 
 
 @only_registered
@@ -59,6 +60,10 @@ fallback_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, show_main_key
 
 
 def add_handlers(app: Application) -> None:
+    # Add middleware first (runs for all updates)
+    app.add_handler(logging_middleware_handler, group=-1)
+
+    # Add all other handlers
     app.add_handler(start_handler)
     app.add_handler(registered_handler)
     app.add_handler(add_recipe_handler)

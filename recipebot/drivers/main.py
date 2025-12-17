@@ -5,6 +5,7 @@ from telegram.ext import ApplicationBuilder, PicklePersistence
 from telegram.ext._application import Application
 
 from recipebot.config import settings
+from recipebot.config.logging.logging import configure_logging
 from recipebot.drivers.handlers import add_handlers
 from recipebot.drivers.keepalive import start_health_check
 from recipebot.drivers.lifespan import on_shutdown, on_startup
@@ -16,8 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    health_thread = Thread(target=start_health_check, daemon=True)
-    health_thread.start()
+    configure_logging()
 
     persistence = PicklePersistence(filepath="recipebot.pickle")
     app: Application = (
