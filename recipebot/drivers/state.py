@@ -5,12 +5,14 @@ from typing_extensions import TypedDict
 from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import AsyncpgConnection
 from recipebot.infra.groq.client import GroqClient
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
+from recipebot.ports.repositories.recipe_tag_repository import RecipeTagRepositoryABC
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
 
 
 class BotState(TypedDict):
     user_repo: UserRepositoryABC
     recipe_repo: RecipeRepositoryABC
+    tag_repo: RecipeTagRepositoryABC
     asyncpg_conn: AsyncpgConnection
     groq_client: GroqClient
 

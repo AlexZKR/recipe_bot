@@ -17,8 +17,8 @@ from recipebot.drivers.state import get_state
 
 async def get_user_tags(user_id: int) -> list:
     """Get user's tags from repository."""
-    recipe_repo = get_state()["recipe_repo"]
-    return await recipe_repo.get_user_tags(user_id)
+    tag_repo = get_state()["tag_repo"]
+    return await tag_repo.get_user_tags(user_id)
 
 
 tag_filter_profile = FilterProfile(

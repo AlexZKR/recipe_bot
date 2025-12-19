@@ -1,15 +1,16 @@
 from uuid import UUID
 
 from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
-from recipebot.domain.recipe.recipe import Recipe, RecipeTag
+from recipebot.domain.recipe.recipe import Recipe
 from recipebot.ports.repositories.exceptions import RecipeNotFound
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
+from recipebot.ports.repositories.recipe_tag_repository import RecipeTagRepositoryABC
 
 
 class MockRecipeRepo(RecipeRepositoryABC):
-    def __init__(self):
-        self._recipes = []
-        self._tags = []
+    def __init__(self, tag_repo: RecipeTagRepositoryABC):
+        self._recipes: list[Recipe] = []
+        self.tag_repo = tag_repo
         self._next_tag_id = 1
 
     async def add(self, recipe_data: Recipe) -> Recipe:
@@ -71,38 +72,6 @@ class MockRecipeRepo(RecipeRepositoryABC):
                 self._recipes.pop(i)
                 return
         raise RecipeNotFound(f"Recipe with ID {id} not found or access denied")
-
-    async def get_user_tags(self, user_id: int) -> list[RecipeTag]:
-        """Get all tags created by a user."""
-        return [tag for tag in self._tags if tag.user_id == user_id]
-
-    async def create_tag(self, tag: RecipeTag) -> RecipeTag:
-        """Create a new tag."""
-        new_tag = RecipeTag(
-            id=self._next_tag_id,
-            name=tag.name,
-            group_id=tag.group_id,
-            user_id=tag.user_id,
-        )
-        self._tags.append(new_tag)
-        self._next_tag_id += 1
-        return new_tag
-
-    async def get_or_create_tag(self, name: str, user_id: int) -> RecipeTag:
-        """Get existing tag or create new one."""
-        # Try to find existing tag
-        for tag in self._tags:
-            if tag.name == name and tag.user_id == user_id:
-                return tag
-
-        # Create new tag
-        new_tag = RecipeTag(
-            id=0,  # Will be set by create_tag
-            name=name,
-            group_id=None,
-            user_id=user_id,
-        )
-        return await self.create_tag(new_tag)
 
     def get_recipes(self) -> list[Recipe]:
         """Helper method to get all recipes for testing purposes."""

@@ -9,9 +9,11 @@ from telegram.ext._application import Application
 from recipebot.domain.auth.user import User
 from recipebot.drivers.handlers import add_handlers
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
+from recipebot.ports.repositories.recipe_tag_repository import RecipeTagRepositoryABC
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
 from recipebot.tests.mocks.mock_bot import MockBot
 from recipebot.tests.mocks.mock_recipe_repo import MockRecipeRepo
+from recipebot.tests.mocks.mock_recipe_tag_repo import MockRecipeTagRepo
 from recipebot.tests.mocks.mock_user_repo import MockUserRepo
 
 
@@ -21,8 +23,15 @@ async def mock_user_repo() -> UserRepositoryABC:
 
 
 @pytest_asyncio.fixture
-async def mock_recipe_repo() -> RecipeRepositoryABC:
-    return MockRecipeRepo()
+async def mock_tag_repo() -> RecipeTagRepositoryABC:
+    return MockRecipeTagRepo()
+
+
+@pytest_asyncio.fixture
+async def mock_recipe_repo(
+    mock_tag_repo: RecipeTagRepositoryABC,
+) -> RecipeRepositoryABC:
+    return MockRecipeRepo(mock_tag_repo)
 
 
 @pytest_asyncio.fixture
@@ -47,12 +56,14 @@ async def test_app(
     test_bot: Bot,
     mock_user_repo: UserRepositoryABC,
     mock_recipe_repo: RecipeRepositoryABC,
+    mock_tag_repo: RecipeTagRepositoryABC,
 ) -> AsyncGenerator[Application]:
     async def on_startup(
         app: Application,
     ):
         app.bot_data["user_repo"] = mock_user_repo
         app.bot_data["recipe_repo"] = mock_recipe_repo
+        app.bot_data["tag_repo"] = mock_tag_repo
 
     async def on_shutdown(app: Application):
         app.bot_data.clear()
