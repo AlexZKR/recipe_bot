@@ -48,7 +48,6 @@ async def _show_search_results(
     paginated_result = PaginatedResult(
         recipes,
         page,
-        callback_prefix=SearchRecipesCallbackPattern.RESULT_PAGINATED_PREFIX,
     )
 
     # Create paginated keyboard

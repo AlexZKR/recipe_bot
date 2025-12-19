@@ -16,13 +16,11 @@ class PaginatedResult:
         items: list[Any],
         page: int,
         page_size: int | None = None,
-        callback_prefix: str = "",
         item_type: str = "recipes",
     ):
         self.items = items
         self.page = page
         self.page_size = page_size or settings.APP.recipe_page_size
-        self.callback_prefix = callback_prefix
         self.item_type = item_type
 
         self.total_items = len(items)
@@ -75,6 +73,7 @@ def create_paginated_keyboard(
     item_callback_factory: Callable[[Any, int], str],
     navigation_prefix: str = "page",
     additional_buttons: list[InlineKeyboardButton] = [],
+    display_text_factory: Callable[[Any, int], str] | None = None,
 ) -> InlineKeyboardMarkup:
     """Create a paginated inline keyboard.
 
@@ -82,6 +81,9 @@ def create_paginated_keyboard(
         paginated_result: The paginated result object
         item_callback_factory: Function that creates callback data for each item
         navigation_prefix: Prefix for navigation buttons (e.g., 'page', 'delete_page')
+        additional_buttons: Additional buttons to add to the keyboard
+        display_text_factory: Optional function to create display text for each item.
+                             If None, uses default logic (title/name attribute)
 
     Returns:
         InlineKeyboardMarkup with items and navigation buttons
@@ -90,8 +92,13 @@ def create_paginated_keyboard(
 
     # Add current page items
     for item in paginated_result.current_page_items:
-        # Handle different item types (Recipe has title, RecipeTag has name)
-        display_text = getattr(item, "title", getattr(item, "name", str(item)))
+        # Use custom display text factory if provided, otherwise use default logic
+        if display_text_factory:
+            display_text = display_text_factory(item, paginated_result.page)
+        else:
+            # Handle different item types (Recipe has title, RecipeTag has name)
+            display_text = getattr(item, "title", getattr(item, "name", str(item)))
+
         keyboard.append(
             [
                 InlineKeyboardButton(

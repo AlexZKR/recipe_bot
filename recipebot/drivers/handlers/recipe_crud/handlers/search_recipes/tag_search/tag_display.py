@@ -7,6 +7,8 @@ from telegram.ext import ContextTypes
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler_context import (
     SearchRecipesCallbackPattern,
+    SearchRecipesContextKey,
+    SearchRecipesFilterOperation,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.messages import (
     TAG_SELECTION_MESSAGE,
@@ -23,7 +25,7 @@ async def show_tag_selection(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     page: int = 1,
-    edit_message: bool = False,
+    edit_message: bool = True,
 ):
     """Show paginated list of available tags for search."""
     if not update.effective_chat or not update.effective_user:
@@ -43,17 +45,35 @@ async def show_tag_selection(
             )
         return
 
+    # Get currently selected tags
+    selected_tags: list[str] = (
+        context.user_data.get(SearchRecipesContextKey.SELECTED_TAGS, [])
+        if context.user_data
+        else []
+    )
+
     # Create paginated result for tags
     paginated_result = PaginatedResult(
         tags,
         page,
-        callback_prefix=SearchRecipesCallbackPattern.TAG_PREFIX,
         item_type="tags",
     )
 
-    # Create paginated keyboard
     def item_callback_factory(tag, current_page):
-        return f"{SearchRecipesCallbackPattern.TAG_PREFIX}{tag.name}"
+        """Check if tag is already selected and return appropriate callback data."""
+        is_selected = tag.name in selected_tags
+        operation = (
+            SearchRecipesFilterOperation.REMOVE
+            if is_selected
+            else SearchRecipesFilterOperation.ADD
+        )
+        return f"{SearchRecipesCallbackPattern.TAG_PREFIX}{operation}__{tag.name}__{current_page}"
+
+    def display_text_factory(tag, current_page):
+        """Check if tag is already selected and show appropriate emoji."""
+        is_selected = tag.name in selected_tags
+        emoji = "❌" if is_selected else "➕"
+        return f"{emoji} {tag.name}"
 
     reply_markup = create_paginated_keyboard(
         paginated_result,
@@ -65,6 +85,7 @@ async def show_tag_selection(
                 callback_data=f"{SearchRecipesCallbackPattern.MODE_PREFIX}",
             )
         ],
+        display_text_factory=display_text_factory,
     )
 
     if edit_message and update.callback_query:

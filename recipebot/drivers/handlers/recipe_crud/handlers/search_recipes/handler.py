@@ -4,7 +4,6 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-# Logging context is now handled automatically by middleware
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.category_search.search_category_utils import (
     show_category_selection,
@@ -83,7 +82,7 @@ async def handle_search_mode_selection(
                 return True
             case SearchRecipesMode.TAG:
                 logger.debug("User selected tag search mode")
-                await show_tag_selection(update, context, edit_message=True)
+                await show_tag_selection(update, context)
                 return True
             case _:
                 logger.warning(f"Unknown search mode selected: {mode or 'empty'}")
@@ -95,17 +94,27 @@ async def handle_search_mode_selection(
 
 
 async def _show_mode_selection_screen(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE, edit_message: bool = True
 ):
     """Show the mode selection screen with current filter status."""
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=SEARCH_MODE_SELECTION_MESSAGE.format(
-            current_filters=get_current_filters_message(context)
-        ),
-        parse_mode=ParseMode.HTML,
-        reply_markup=create_search_mode_keyboard(),
+    text = SEARCH_MODE_SELECTION_MESSAGE.format(
+        current_filters=get_current_filters_message(context)
     )
+    reply_markup = create_search_mode_keyboard()
+
+    if edit_message and update.callback_query:
+        await update.callback_query.edit_message_text(
+            text=text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=reply_markup,
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=reply_markup,
+        )

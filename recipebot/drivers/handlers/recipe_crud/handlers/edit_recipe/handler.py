@@ -99,7 +99,7 @@ async def _show_edit_recipe_list(
         return
 
     # Create paginated result
-    paginated_result = PaginatedResult(recipes, page, callback_prefix="edit_recipe_")
+    paginated_result = PaginatedResult(recipes, page)
 
     # Create paginated keyboard
     def item_callback_factory(recipe, current_page):

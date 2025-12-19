@@ -56,7 +56,7 @@ async def _show_delete_recipe_list(
         return
 
     # Create paginated result
-    paginated_result = PaginatedResult(recipes, page, callback_prefix="delete_recipe_")
+    paginated_result = PaginatedResult(recipes, page)
 
     # Create paginated keyboard
     def item_callback_factory(recipe, current_page):
