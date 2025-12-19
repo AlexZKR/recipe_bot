@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from recipebot.domain.recipe.recipe import Recipe, RecipeTag
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
+from recipebot.domain.recipe.recipe import Recipe
 
 
 class RecipeRepositoryABC(ABC):
@@ -14,7 +15,8 @@ class RecipeRepositoryABC(ABC):
         pass
 
     @abstractmethod
-    async def list_by_user(self, user_id: int) -> list[Recipe]:
+    async def list_filtered(self, filters: RecipeFilters) -> list[Recipe]:
+        """List recipes with optional filtering by tags and categories."""
         pass
 
     @abstractmethod
@@ -23,24 +25,4 @@ class RecipeRepositoryABC(ABC):
 
     @abstractmethod
     async def delete(self, id: UUID, user_id: int) -> None:
-        pass
-
-    @abstractmethod
-    async def get_user_tags(self, user_id: int) -> list[RecipeTag]:
-        """Get all tags created by a user."""
-        pass
-
-    @abstractmethod
-    async def create_tag(self, tag: RecipeTag) -> RecipeTag:
-        """Create a new tag."""
-        pass
-
-    @abstractmethod
-    async def get_or_create_tag(self, name: str, user_id: int) -> RecipeTag:
-        """Get existing tag or create new one."""
-        pass
-
-    @abstractmethod
-    async def search_by_tags(self, user_id: int, tag_names: list[str]) -> list[Recipe]:
-        """Search recipes by tags for a specific user."""
         pass

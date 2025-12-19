@@ -6,6 +6,9 @@ from recipebot.drivers.handlers.recipe_crud.shared.callbacks import (
 from recipebot.drivers.handlers.recipe_crud.shared.constants import (
     RECIPE_PREFIX,
 )
+from recipebot.drivers.handlers.recipe_crud.shared.filters import (
+    create_filter_description,
+)
 from recipebot.drivers.handlers.recipe_crud.shared.keyboards import (
     create_category_reply_keyboard,
     create_recipe_selection_keyboard,
@@ -21,6 +24,8 @@ __all__ = [
     "parse_prefixed_callback",
     # Constants
     "RECIPE_PREFIX",
+    # Filters
+    "create_filter_description",
     # Keyboards
     "create_recipe_selection_keyboard",
     "create_category_reply_keyboard",

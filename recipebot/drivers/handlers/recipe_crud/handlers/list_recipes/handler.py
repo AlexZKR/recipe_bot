@@ -3,6 +3,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes.utils import (
@@ -10,6 +11,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes.utils import (
 )
 from recipebot.drivers.handlers.recipe_crud.shared import (
     PaginatedResult,
+    create_filter_description,
     create_paginated_keyboard,
     parse_pagination_callback,
 )
@@ -22,33 +24,37 @@ async def list_recipes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await _show_recipe_list(update, context, page=1)
 
 
-async def _show_recipe_list(
+async def _show_recipe_list(  # noqa: PLR0912
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     page: int = 1,
     edit_message: bool = False,
+    filters: RecipeFilters | None = None,
 ):
     """Show paginated recipe list."""
     if not update.effective_chat or not update.effective_user:
         raise Exception("Not chat or user in the update")
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.list_by_user(update.effective_user.id)
+    if filters is None:
+        filters = RecipeFilters(user_id=update.effective_user.id)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
+        filter_desc = create_filter_description(filters)
+        message = f"No recipes found{filter_desc}. Try adjusting your filters or use /add to create a new recipe!"
+
         if edit_message and update.callback_query:
-            await update.callback_query.edit_message_text(
-                "You don't have any recipes yet. Use /add to create your first recipe!"
-            )
+            await update.callback_query.edit_message_text(message)
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="You don't have any recipes yet. Use /add to create your first recipe!",
+                text=message,
             )
         return
 
     # Create paginated result
-    paginated_result = PaginatedResult(recipes, page, callback_prefix="recipe_")
+    paginated_result = PaginatedResult(recipes, page)
 
     # Create paginated keyboard
     def item_callback_factory(recipe, current_page):
@@ -58,9 +64,12 @@ async def _show_recipe_list(
         paginated_result, item_callback_factory, navigation_prefix="list_page"
     )
 
-    message_text = (
-        f"Select a recipe to view:\n\n{paginated_result.get_page_info_text()}"
-    )
+    # Create filter description for the header
+    filter_desc = create_filter_description(filters, prefix="Filtered by")
+    if filter_desc:
+        filter_desc += "\n\n"
+
+    message_text = f"{filter_desc}Select a recipe to view:\n\n{paginated_result.get_page_info_text()}"
 
     if edit_message and update.callback_query:
         await update.callback_query.edit_message_text(
