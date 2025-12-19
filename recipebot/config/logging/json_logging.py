@@ -18,10 +18,11 @@ class JSONFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
+            "user_data": record.user_data,
         }
 
         # Add raw context fields (reusable structured data)
-        for attr in ["user_id", "chat_id", "username"]:
+        for attr in ["user_id", "chat_id", "username", "user_data"]:
             value = getattr(record, attr, None)
             if value is not None:
                 log_entry[attr] = value

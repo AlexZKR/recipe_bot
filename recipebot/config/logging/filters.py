@@ -3,6 +3,9 @@
 import logging
 import threading
 
+from telegram import Update
+from telegram.ext import ContextTypes
+
 # Thread-local storage for current request context
 _local = threading.local()
 
@@ -14,15 +17,15 @@ class TelegramContextFilter(logging.Filter):
         record.user_id = getattr(_local, "user_id", None)
         record.chat_id = getattr(_local, "chat_id", None)
         record.username = getattr(_local, "username", None)
-
+        record.user_data = getattr(_local, "user_data", None)
         return True
 
 
-def set_telegram_context(update) -> None:
+def set_telegram_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Set Telegram context for automatic logging in all subsequent log calls.
 
     Usage:
-        set_telegram_context(update)
+        set_telegram_context(update, context)
         logger.info("This will automatically include user/chat context")
         logger.debug("This too!")
     """
@@ -32,6 +35,8 @@ def set_telegram_context(update) -> None:
         _local.chat_id = update.effective_chat.id
     if update.effective_user:
         _local.username = update.effective_user.username or "no_username"
+    if context.user_data:
+        _local.user_data = context.user_data
 
 
 def clear_telegram_context() -> None:
@@ -42,3 +47,5 @@ def clear_telegram_context() -> None:
         delattr(_local, "chat_id")
     if hasattr(_local, "username"):
         delattr(_local, "username")
+    if hasattr(_local, "user_data"):
+        delattr(_local, "user_data")

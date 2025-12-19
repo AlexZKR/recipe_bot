@@ -20,7 +20,7 @@ async def logging_middleware(
     """
     # Clear any existing context and set fresh context for this request
     clear_telegram_context()
-    set_telegram_context(update)
+    set_telegram_context(update, context)
     # Note: This handler doesn't return True, so processing continues to other handlers
 
 
