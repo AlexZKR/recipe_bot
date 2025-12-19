@@ -1,11 +1,16 @@
 """Tag display utilities for tag search functionality."""
 
 from telegram import InlineKeyboardButton, Update
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler_context import (
     SearchRecipesCallbackPattern,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.messages import (
+    TAG_SELECTION_MESSAGE,
+    get_current_filters_message,
 )
 from recipebot.drivers.handlers.recipe_crud.shared import (
     PaginatedResult,
@@ -62,18 +67,22 @@ async def show_tag_selection(
         ],
     )
 
-    message_text = f"Select a tag to search for recipes:\n\n{paginated_result.get_page_info_text()}"
-
     if edit_message and update.callback_query:
         await update.callback_query.edit_message_text(
-            message_text,
+            TAG_SELECTION_MESSAGE.format(
+                current_filters=get_current_filters_message(context)
+            ),
             reply_markup=reply_markup,
+            parse_mode=ParseMode.HTML,
         )
     else:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=message_text,
+            text=TAG_SELECTION_MESSAGE.format(
+                current_filters=get_current_filters_message(context)
+            ),
             reply_markup=reply_markup,
+            parse_mode=ParseMode.HTML,
         )
 
         # Also show the main keyboard below
@@ -81,4 +90,5 @@ async def show_tag_selection(
             chat_id=update.effective_chat.id,
             text="Or use the keyboard below:",
             reply_markup=MAIN_KEYBOARD,
+            parse_mode=ParseMode.HTML,
         )

@@ -6,6 +6,8 @@ import threading
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from recipebot.config.logging.json_logging import safe_serialize_value
+
 # Thread-local storage for current request context
 _local = threading.local()
 
@@ -21,7 +23,9 @@ class TelegramContextFilter(logging.Filter):
         return True
 
 
-def set_telegram_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def set_telegram_context(
+    update: Update, context: ContextTypes.DEFAULT_TYPE | None = None
+) -> None:
     """Set Telegram context for automatic logging in all subsequent log calls.
 
     Usage:
@@ -35,7 +39,16 @@ def set_telegram_context(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         _local.chat_id = update.effective_chat.id
     if update.effective_user:
         _local.username = update.effective_user.username or "no_username"
-    if context.user_data:
+
+    # Safely extract user_data if context is provided
+    if context and hasattr(context, "user_data") and context.user_data:
+        try:
+            # Create a safe copy of user_data for logging
+            _local.user_data = safe_serialize_value(dict(context.user_data))
+        except Exception:
+            # If serialization fails, don't include user_data
+            _local.user_data = {"error": "could_not_serialize"}
+    if context and hasattr(context, "user_data") and context.user_data:
         _local.user_data = context.user_data
 
 

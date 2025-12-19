@@ -20,6 +20,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.layout impor
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.messages import (
     SEARCH_INIT_MESSAGE,
     SEARCH_MODE_SELECTION_MESSAGE,
+    get_current_filters_message,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_display import (
     show_tag_selection,
@@ -44,7 +45,9 @@ async def search_recipes_handler(update: Update, context: ContextTypes.DEFAULT_T
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=SEARCH_INIT_MESSAGE,
+        text=SEARCH_INIT_MESSAGE.format(
+            current_filters=get_current_filters_message(context)
+        ),
         parse_mode=ParseMode.HTML,
         reply_markup=create_search_mode_keyboard(),
     )
@@ -57,7 +60,11 @@ async def handle_search_mode_selection(
     query = update.callback_query
 
     # Handle callback query (when called from button press)
-    if query and query.data:
+    if (
+        query
+        and query.data
+        and query.data.startswith(SearchRecipesCallbackPattern.MODE_PREFIX)
+    ):
         await query.answer()
         logger.debug(f"Mode selection callback received: '{query.data}'")
         mode = query.data[len(SearchRecipesCallbackPattern.MODE_PREFIX) :]
@@ -91,21 +98,13 @@ async def _show_mode_selection_screen(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
     """Show the mode selection screen with current filter status."""
-    selected_tags: list[str] = context.user_data.get(
-        SearchRecipesContextKey.SELECTED_TAGS, []
-    )
-    selected_categories: list[str] = context.user_data.get(
-        SearchRecipesContextKey.SELECTED_CATEGORIES, []
-    )
+    if not update.effective_chat or not update.effective_user:
+        raise Exception("Not chat or user in the update")
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=SEARCH_MODE_SELECTION_MESSAGE.format(
-            selected_tags=", ".join([f"#{tag}" for tag in selected_tags]) or "None",
-            selected_categories=", ".join(
-                [f"{category.capitalize()}" for category in selected_categories]
-            )
-            or "None",
+            current_filters=get_current_filters_message(context)
         ),
         parse_mode=ParseMode.HTML,
         reply_markup=create_search_mode_keyboard(),

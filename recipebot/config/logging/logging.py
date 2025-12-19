@@ -39,3 +39,4 @@ def configure_logging() -> None:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("asyncio").setLevel(logging.INFO)
     logging.getLogger("telegram").setLevel(logging.INFO)
+    logging.getLogger("groq._base_client").setLevel(logging.WARNING)

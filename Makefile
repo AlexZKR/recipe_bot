@@ -11,14 +11,14 @@ mypy:
 	mypy .
 
 ruff:
-	ruff check --fix
+	ruff check --config pyproject.toml --fix
 
 bandit:
 	bandit -c pyproject.toml -r . --quiet
 
 # Formatting
 format:
-	ruff format .
+	ruff format --config pyproject.toml .
 
 start:
 	docker compose up --build -d
