@@ -1,5 +1,9 @@
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.category_search.category_handlers import (
+    handle_category_pagination,
+    handle_category_selection,
+)
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler import (
     handle_search_mode_selection,
     search_recipes_handler,
@@ -24,7 +28,9 @@ search_mode_selection_handler = CallbackQueryHandler(
 search_tag_selection_handler = CallbackQueryHandler(
     handle_tag_selection, pattern=rf"^{SearchRecipesCallbackPattern.TAG_PREFIX}"
 )
-
+search_category_selection_handler = CallbackQueryHandler(
+    handle_category_selection, pattern=r"^search_category_"
+)
 
 search_result_handler = CallbackQueryHandler(
     handle_search_result,
@@ -36,4 +42,7 @@ search_pagination_handler = CallbackQueryHandler(
 )
 search_tag_pagination_handler = CallbackQueryHandler(
     handle_tag_pagination, pattern=rf"^{SearchRecipesCallbackPattern.TAG_PAGE_PREFIX}_"
+)
+search_category_pagination_handler = CallbackQueryHandler(
+    handle_category_pagination, pattern=r"^search_category_page_"
 )

@@ -37,5 +37,5 @@ def get_current_filters_message(context: ContextTypes.DEFAULT_TYPE) -> str:
         f"Current filters:\n"
         f"Tags: {', '.join([f'#{tag}' for tag in selected_tags]) or 'None'}\n"
         f"Categories: {', '.join([f'{category.capitalize()}' for category in selected_categories]) or 'None'}\n\n"
-        "Press button with X to remove filter, press button with + to add filter.\n\n"
+        "Press button with X to remove filter, press button with + to add filter. Return to mode selection by pressing the button with the back arrow to execute search.\n\n"
     )

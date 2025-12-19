@@ -5,7 +5,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
-from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.category_search.search_category_utils import (
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.category_search.category_display import (
     show_category_selection,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler_context import (
@@ -21,7 +21,7 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.messages imp
     SEARCH_MODE_SELECTION_MESSAGE,
     get_current_filters_message,
 )
-from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_display import (
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_handlers import (
     show_tag_selection,
 )
 

@@ -7,12 +7,14 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.filter_selec
     handle_generic_filter_pagination,
     handle_generic_filter_selection,
 )
-from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler_context import (
-    SearchRecipesCallbackPattern,
-    SearchRecipesContextKey,
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_constants import (
+    TAG_PAGE_PREFIX,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_display import (
     show_tag_selection,
+)
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.tag_search.tag_filter_profile import (
+    tag_filter_profile,
 )
 
 
@@ -21,8 +23,7 @@ async def handle_tag_selection(update: Update, context: ContextTypes.DEFAULT_TYP
     return await handle_generic_filter_selection(
         update=update,
         context=context,
-        callback_prefix=SearchRecipesCallbackPattern.TAG_PREFIX,
-        selected_user_data_key=SearchRecipesContextKey.SELECTED_TAGS,
+        profile=tag_filter_profile,
         show_function=show_tag_selection,
     )
 
@@ -32,6 +33,6 @@ async def handle_tag_pagination(update: Update, context: ContextTypes.DEFAULT_TY
     return await handle_generic_filter_pagination(
         update=update,
         context=context,
-        page_prefix=SearchRecipesCallbackPattern.TAG_PAGE_PREFIX,
+        page_prefix=TAG_PAGE_PREFIX,
         show_function=show_tag_selection,
     )
