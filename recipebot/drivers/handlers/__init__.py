@@ -30,11 +30,12 @@ from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
     recipe_selection_handler,
 )
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
+    search_mode_selection_handler,
     search_pagination_handler,
     search_recipes_handler,
     search_result_handler,
-    search_tag_handler,
     search_tag_pagination_handler,
+    search_tag_selection_handler,
 )
 from recipebot.drivers.handlers.recipe_crud.shared_tag_callbacks import (
     global_tag_callback_handler,
@@ -76,9 +77,10 @@ def add_handlers(app: Application) -> None:
     app.add_handler(delete_recipe_selection_handler)
     app.add_handler(delete_confirmation_handler)
     app.add_handler(delete_pagination_handler)
+    app.add_handler(search_mode_selection_handler)
     app.add_handler(search_result_handler)
     app.add_handler(search_tag_pagination_handler)
-    app.add_handler(search_tag_handler)
+    app.add_handler(search_tag_selection_handler)
     app.add_handler(global_tag_callback_handler)
     app.add_handler(list_pagination_handler)
     app.add_handler(search_recipes_handler)

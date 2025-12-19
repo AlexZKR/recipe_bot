@@ -74,6 +74,7 @@ def create_paginated_keyboard(
     paginated_result: PaginatedResult,
     item_callback_factory: Callable[[Any, int], str],
     navigation_prefix: str = "page",
+    additional_buttons: list[InlineKeyboardButton] = [],
 ) -> InlineKeyboardMarkup:
     """Create a paginated inline keyboard.
 
@@ -125,6 +126,9 @@ def create_paginated_keyboard(
         if nav_buttons:
             keyboard.append(nav_buttons)
 
+    # Add additional buttons if provided
+    if additional_buttons:
+        keyboard.append(additional_buttons)
     return InlineKeyboardMarkup(keyboard)
 
 
