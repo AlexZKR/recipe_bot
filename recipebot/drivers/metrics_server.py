@@ -10,8 +10,15 @@ from recipebot.config import settings
 logger = logging.getLogger(__name__)
 
 
-class HealthCheckHandler(BaseHTTPRequestHandler):
+class MetricsHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if not self._check_auth():
+            self.send_response(401)
+            self.send_header("WWW-Authenticate", 'Basic realm="Metrics"')
+            self.end_headers()
+            self.wfile.write(b"Authentication required")
+            return
+
         if self.path == "/metrics":
             if self._check_auth():
                 self.send_response(200)
@@ -24,9 +31,10 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b"Authentication required")
         else:
-            self.send_response(200)
+            self.send_response(404)
             self.end_headers()
-            self.wfile.write(b"Bot is running!")
+            self.wfile.write(b"Not found")
+            return
 
     def _check_auth(self) -> bool:
         """Validates Basic Auth header."""
@@ -50,9 +58,9 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
             return False
 
 
-def start_health_check():
+def start_metrics_server():
     port = int(os.environ.get("PORT", "8080"))
-    logger.info(f"Starting health check server on port {port}")
+    logger.info(f"Starting metrics server on port {port}")
 
-    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)  # nosec B104
+    server = HTTPServer(("0.0.0.0", port), MetricsHandler)  # nosec B104
     server.serve_forever()

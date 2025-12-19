@@ -65,20 +65,34 @@ class AppSettings(BaseSettings):
     metrics_pass: SecretStr = SecretStr("metrics_pass")
 
     testers_list: str = ""
+    logging_level: str = "INFO"
+    json_logging: bool = True
 
     @property
     def tester_ids(self) -> list[int]:
         """Parses the comma-separated string of IDs into a list of integers.
 
         Example: "12345678, 987654321, 112233445"
+        Handles quotes around the entire string (common in cloud deployments).
         """
         if not self.testers_list:
             return []
+
+        # Clean the input string - remove surrounding quotes if present
+        cleaned_list = self.testers_list.strip()
+        if (cleaned_list.startswith('"') and cleaned_list.endswith('"')) or (
+            cleaned_list.startswith("'") and cleaned_list.endswith("'")
+        ):
+            cleaned_list = cleaned_list[1:-1]
+
         try:
-            return [int(uid.strip()) for uid in self.testers_list.split(",")]
-        except ValueError:
+            ids = [int(uid.strip()) for uid in cleaned_list.split(",") if uid.strip()]
+            logger.info(f"Tester IDs: {ids}")
+            return ids
+        except ValueError as e:
             logger.error(
-                "Failed to parse tester IDs. Ensure they are comma-separated integers."
+                f"Failed to parse tester IDs '{self.testers_list}': {e}. "
+                "Ensure they are comma-separated integers without surrounding quotes."
             )
             return []
 

@@ -5,26 +5,27 @@ from uuid import UUID
 from recipebot.adapters.repositories.sql.base.base_asyncpg_repo import AsyncpgConnection
 from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.adapters.repositories.sql.recipe.queries import (
-    CREATE_TAG_QUERY,
     DELETE_RECIPE_QUERY,
-    FIND_EXISTING_TAG_QUERY,
     GET_RECIPE_BY_ID_QUERY,
-    GET_RECIPES_BY_USER_QUERY,
-    GET_USER_TAGS_QUERY,
     INSERT_RECIPE_QUERY,
-    SEARCH_RECIPES_BY_TAGS_QUERY,
+    SEARCH_RECIPES_FILTERED_QUERY,
     UPDATE_RECIPE_QUERY,
 )
-from recipebot.domain.recipe.recipe import Recipe, RecipeTag
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
+from recipebot.domain.recipe.recipe import Recipe
 from recipebot.ports.repositories.exceptions import RecipeNotFound, RepositoryException
 from recipebot.ports.repositories.recipe_repository import RecipeRepositoryABC
+from recipebot.ports.repositories.recipe_tag_repository import RecipeTagRepositoryABC
 
 logger = getLogger(__name__)
 
 
 class RecipeAsyncpgRepo(RecipeRepositoryABC):
-    def __init__(self, conn: AsyncpgConnection) -> None:
+    def __init__(
+        self, conn: AsyncpgConnection, tag_repo: RecipeTagRepositoryABC
+    ) -> None:
         self.conn = conn
+        self.tag_repo = tag_repo
 
     async def add(self, recipe_data: Recipe) -> Recipe:
         logger.info(f"Adding recipe {recipe_data.title} for user {recipe_data.user_id}")
@@ -33,7 +34,9 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
         tag_ids = []
         if recipe_data.tags:
             for tag_name in recipe_data.tags:
-                tag = await self.get_or_create_tag(tag_name, recipe_data.user_id)
+                tag = await self.tag_repo.get_or_create_tag(
+                    tag_name, recipe_data.user_id
+                )
                 tag_ids.append(tag.id)
 
         async with self.conn.get_cursor() as conn:
@@ -91,12 +94,16 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
 
         return Recipe.model_validate(row_dict)
 
-    async def list_by_user(self, user_id: int) -> list[Recipe]:
-        logger.info(f"Listing recipes for user {user_id}")
+    async def list_filtered(self, filters: RecipeFilters) -> list[Recipe]:
+        """List recipes with optional filtering by tags and categories."""
+        logger.info(str(filters))
+
         async with self.conn.get_cursor() as conn:
             result = await conn.fetch(
-                load_query(__file__, GET_RECIPES_BY_USER_QUERY),
-                user_id,
+                load_query(__file__, SEARCH_RECIPES_FILTERED_QUERY),
+                filters.user_id,
+                filters.tag_names,
+                filters.category_names,
             )
 
         recipes = []
@@ -130,7 +137,9 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
         tag_ids = []
         if recipe_data.tags:
             for tag_name in recipe_data.tags:
-                tag = await self.get_or_create_tag(tag_name, recipe_data.user_id)
+                tag = await self.tag_repo.get_or_create_tag(
+                    tag_name, recipe_data.user_id
+                )
                 tag_ids.append(tag.id)
 
         async with self.conn.get_cursor() as conn:
@@ -165,99 +174,3 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
             )
             if result == "DELETE 0":
                 raise RecipeNotFound(f"Recipe with ID {id} not found or access denied")
-
-    async def get_user_tags(self, user_id: int) -> list[RecipeTag]:
-        """Get all tags created by a user."""
-        async with self.conn.get_cursor() as conn:
-            result = await conn.fetch(
-                load_query(__file__, GET_USER_TAGS_QUERY),
-                user_id,
-            )
-            return [
-                RecipeTag(
-                    id=row["id"],
-                    name=row["name"],
-                    group_id=row["group_id"],
-                    user_id=row["user_id"],
-                )
-                for row in result
-            ]
-
-    async def create_tag(self, tag: RecipeTag) -> RecipeTag:
-        """Create a new tag."""
-        async with self.conn.get_cursor() as conn:
-            result = await conn.fetchrow(
-                load_query(__file__, CREATE_TAG_QUERY),
-                tag.name,
-                tag.group_id,
-                tag.user_id,
-            )
-            if result:
-                return RecipeTag(
-                    id=result["id"],
-                    name=tag.name,
-                    group_id=tag.group_id,
-                    user_id=tag.user_id,
-                )
-            raise RepositoryException("Failed to create tag")
-
-    async def get_or_create_tag(self, name: str, user_id: int) -> RecipeTag:
-        """Get existing tag or create new one."""
-        async with self.conn.get_cursor() as conn:
-            # Try to find existing tag
-            result = await conn.fetchrow(
-                load_query(__file__, FIND_EXISTING_TAG_QUERY),
-                name,
-                user_id,
-            )
-
-            if result:
-                return RecipeTag(
-                    id=result["id"],
-                    name=result["name"],
-                    group_id=result["group_id"],
-                    user_id=result["user_id"],
-                )
-
-            # Create new tag
-            new_tag = RecipeTag(
-                id=0,  # Will be set by database
-                name=name,
-                group_id=None,  # Assuming no group for now
-                user_id=user_id,
-            )
-            return await self.create_tag(new_tag)
-
-    async def search_by_tags(self, user_id: int, tag_names: list[str]) -> list[Recipe]:
-        """Search recipes by tags for a user."""
-        logger.info(f"Searching recipes for user {user_id} with tags: {tag_names}")
-        async with self.conn.get_cursor() as conn:
-            result = await conn.fetch(
-                load_query(__file__, SEARCH_RECIPES_BY_TAGS_QUERY),
-                user_id,
-                tag_names,
-            )
-
-        recipes = []
-        for row in result:
-            row_dict = dict(row)
-            if row_dict.get("tag_names"):
-                row_dict["tags"] = [
-                    tag for tag in row_dict["tag_names"] if tag is not None
-                ]
-            else:
-                row_dict["tags"] = []
-
-            # Convert ingredients JSONB back to list of Ingredient objects
-            if row_dict.get("ingredients"):
-                ingredients_data = json.loads(row_dict["ingredients"])
-                row_dict["ingredients"] = ingredients_data
-
-            # Convert steps JSONB back to list of strings
-            if row_dict.get("steps"):
-                steps_data = json.loads(row_dict["steps"])
-                row_dict["steps"] = steps_data
-
-            recipes.append(Recipe.model_validate(row_dict))
-
-        return recipes

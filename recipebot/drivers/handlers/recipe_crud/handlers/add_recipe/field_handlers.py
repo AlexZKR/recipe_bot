@@ -158,7 +158,12 @@ async def handle_tags(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         # Handle new tag input
         tag_name = update.message.text.strip()
         if tag_name:
-            add_tag_to_recipe(context, tag_name)
+            success = add_tag_to_recipe(context, tag_name)
+            if not success:
+                # Tag name contains forbidden characters
+                await update.message.reply_text(
+                    "❌ Tag names cannot contain '__' (double underscores). Please choose a different tag name."
+                )
         await show_tags_keyboard(update, context)
         return TAGS
 

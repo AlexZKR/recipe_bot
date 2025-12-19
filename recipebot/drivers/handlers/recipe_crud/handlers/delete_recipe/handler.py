@@ -4,6 +4,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.delete_recipe.handler_context import (
@@ -41,7 +42,8 @@ async def _show_delete_recipe_list(
         raise Exception("Not chat or user in the update")
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.list_by_user(update.effective_user.id)
+    filters = RecipeFilters(user_id=update.effective_user.id)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
         if edit_message and update.callback_query:
@@ -56,7 +58,7 @@ async def _show_delete_recipe_list(
         return
 
     # Create paginated result
-    paginated_result = PaginatedResult(recipes, page, callback_prefix="delete_recipe_")
+    paginated_result = PaginatedResult(recipes, page)
 
     # Create paginated keyboard
     def item_callback_factory(recipe, current_page):
@@ -198,7 +200,8 @@ async def _return_to_recipe_selection(query, context: ContextTypes.DEFAULT_TYPE)
         return
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.list_by_user(user_id)
+    filters = RecipeFilters(user_id=user_id)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
         await query.edit_message_text(
