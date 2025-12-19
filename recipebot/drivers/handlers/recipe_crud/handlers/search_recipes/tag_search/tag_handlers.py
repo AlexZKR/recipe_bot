@@ -57,12 +57,10 @@ async def handle_tag_selection(update: Update, context: ContextTypes.DEFAULT_TYP
         )
 
         if operation == SearchRecipesFilterOperation.ADD:
-            # Add tag if not already selected
             if tag_name not in selected_tags:
                 selected_tags.append(tag_name)
                 logger.debug(f"Added tag '{tag_name}' to selected tags")
         elif operation == SearchRecipesFilterOperation.REMOVE:
-            # Remove tag if it exists
             if tag_name in selected_tags:
                 selected_tags.remove(tag_name)
                 logger.debug(f"Removed tag '{tag_name}' from selected tags")
@@ -72,9 +70,8 @@ async def handle_tag_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
         context.user_data[SearchRecipesContextKey.SELECTED_TAGS] = selected_tags
 
-    await show_tag_selection(update, context, page=current_page, edit_message=True)
+    await show_tag_selection(update, context, page=current_page)
 
-    # Return True to indicate we handled this callback
     return True
 
 
@@ -86,15 +83,12 @@ async def handle_tag_pagination(update: Update, context: ContextTypes.DEFAULT_TY
 
     await query.answer()
 
-    # Parse pagination callback
     page = parse_pagination_callback(
         query.data, SearchRecipesCallbackPattern.TAG_PAGE_PREFIX
     )
     if page is None:
         return
 
-    # Show the requested page
-    await show_tag_selection(update, context, page=page, edit_message=True)
+    await show_tag_selection(update, context, page=page)
 
-    # Return True to indicate we handled this callback
     return True

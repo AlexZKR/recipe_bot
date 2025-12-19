@@ -81,7 +81,7 @@ async def show_tag_selection(
         navigation_prefix=SearchRecipesCallbackPattern.TAG_PAGE_PREFIX,
         additional_buttons=[
             InlineKeyboardButton(
-                "⬅️ Back to mode selection",
+                "🔙 Back to mode selection",
                 callback_data=f"{SearchRecipesCallbackPattern.MODE_PREFIX}",
             )
         ],
