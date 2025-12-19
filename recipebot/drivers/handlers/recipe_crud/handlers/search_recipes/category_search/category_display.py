@@ -9,6 +9,10 @@ from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.category_sea
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.filter_selection_utils import (
     show_generic_filter_selection,
 )
+from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.messages import (
+    CATEGORY_SELECTION_MESSAGE,
+    get_current_filters_message,
+)
 
 
 async def show_category_selection(
@@ -18,19 +22,8 @@ async def show_category_selection(
 ):
     """Show paginated list of available categories for search."""
     # Create message with current filters info
-    # For categories, we'll use a generic message since categories don't have custom messages like tags
-    selected_categories = (
-        context.user_data.get(category_filter_profile.selected_user_data_key, [])
-        if context.user_data
-        else []
-    )
-
-    filters_text = (
-        f"Selected categories: {', '.join(selected_categories)}"
-        if selected_categories
-        else "No categories selected yet."
-    )
-    message = f"Select categories to filter recipes:\n\n{filters_text}"
+    current_filters = get_current_filters_message(context)
+    message = CATEGORY_SELECTION_MESSAGE.format(current_filters=current_filters)
 
     await show_generic_filter_selection(
         update=update,

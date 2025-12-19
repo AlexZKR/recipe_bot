@@ -56,3 +56,4 @@ class SearchRecipesCallbackPattern(StrEnum):
     TAG_PAGE_PREFIX = "search_tag_page"
 
     MODE_PREFIX = "search_mode_"
+    SEARCH_PREFIX = "search_execute"

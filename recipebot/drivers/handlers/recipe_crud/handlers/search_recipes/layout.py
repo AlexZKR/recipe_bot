@@ -21,6 +21,12 @@ def create_search_mode_keyboard() -> InlineKeyboardMarkup:
                 callback_data=f"{SearchRecipesCallbackPattern.MODE_PREFIX}{SearchRecipesMode.TAG}",
             )
         ],
+        [
+            InlineKeyboardButton(
+                "🔍 Search",
+                callback_data=SearchRecipesCallbackPattern.SEARCH_PREFIX,
+            )
+        ],
     ]
 
     return InlineKeyboardMarkup(keyboard)

@@ -32,10 +32,9 @@ from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes import (
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes import (
     search_category_pagination_handler,
     search_category_selection_handler,
+    search_execution_handler,
     search_mode_selection_handler,
-    search_pagination_handler,
     search_recipes_handler,
-    search_result_handler,
     search_tag_pagination_handler,
     search_tag_selection_handler,
 )
@@ -80,7 +79,7 @@ def add_handlers(app: Application) -> None:
     app.add_handler(delete_confirmation_handler)
     app.add_handler(delete_pagination_handler)
     app.add_handler(search_mode_selection_handler)
-    app.add_handler(search_result_handler)
+    app.add_handler(search_execution_handler)
     app.add_handler(search_tag_pagination_handler)
     app.add_handler(search_tag_selection_handler)
     app.add_handler(search_category_pagination_handler)
@@ -88,7 +87,6 @@ def add_handlers(app: Application) -> None:
     app.add_handler(global_tag_callback_handler)
     app.add_handler(list_pagination_handler)
     app.add_handler(search_recipes_handler)
-    app.add_handler(search_pagination_handler)
     app.add_handler(update_recipe_handler)
     app.add_handler(edit_field_conversation)
     app.add_handler(edit_category_selection_handler)
