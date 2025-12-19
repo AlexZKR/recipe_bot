@@ -12,6 +12,7 @@ from telegram.ext import (
 )
 from telegram.warnings import PTBUserWarning
 
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
 from recipebot.domain.recipe.recipe import RecipeCategory
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.basic_fallback import (
@@ -85,7 +86,8 @@ async def _show_edit_recipe_list(
         raise Exception("Not chat or user in the update")
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.list_by_user(update.effective_user.id)
+    filters = RecipeFilters(user_id=update.effective_user.id)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
         message = NO_RECIPES

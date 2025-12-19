@@ -3,6 +3,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.search_recipes.handler_context import (
     SearchRecipesCallbackPattern,
@@ -29,7 +30,8 @@ async def _show_search_results(
         raise Exception("Not chat or user in the update")
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.search_by_tags(update.effective_user.id, search_tags)
+    filters = RecipeFilters(user_id=update.effective_user.id, tag_names=search_tags)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
         message = (

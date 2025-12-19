@@ -3,6 +3,7 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
+from recipebot.adapters.repositories.sql.recipe.recipe_filters import RecipeFilters
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.handlers.recipe_crud.handlers.list_recipes.utils import (
@@ -33,7 +34,8 @@ async def _show_recipe_list(
         raise Exception("Not chat or user in the update")
 
     recipe_repo = get_state()["recipe_repo"]
-    recipes = await recipe_repo.list_by_user(update.effective_user.id)
+    filters = RecipeFilters(user_id=update.effective_user.id)
+    recipes = await recipe_repo.list_filtered(filters)
 
     if not recipes:
         if edit_message and update.callback_query:
