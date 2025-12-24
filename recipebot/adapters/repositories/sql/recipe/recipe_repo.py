@@ -52,8 +52,8 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
                             ingredient.model_dump()
                             for ingredient in recipe_data.ingredients
                         ]
-                    ),
-                    orjson.dumps(recipe_data.steps),
+                    ).decode("utf-8"),
+                    orjson.dumps(recipe_data.steps).decode("utf-8"),
                     recipe_data.category.value,
                     recipe_data.desc,
                     recipe_data.estimated_time,
@@ -175,8 +175,8 @@ class RecipeAsyncpgRepo(RecipeRepositoryABC):
                             ingredient.model_dump()
                             for ingredient in recipe_data.ingredients
                         ]
-                    ),
-                    orjson.dumps(recipe_data.steps),
+                    ).decode("utf-8"),
+                    orjson.dumps(recipe_data.steps).decode("utf-8"),
                     recipe_data.category.value,
                     recipe_data.servings,
                     recipe_data.desc,

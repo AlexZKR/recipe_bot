@@ -12,6 +12,13 @@ from opentelemetry.sdk.resources import Resource
 from recipebot.config import settings
 
 
+def serialize_for_otel(_, __, event_dict):
+    """Sanitizes the event_dict for OTel using orjson."""
+    return orjson.loads(
+        orjson.dumps(event_dict, default=str, option=orjson.OPT_NON_STR_KEYS)
+    )
+
+
 def configure_logging() -> None:
     # 1. Setup OTel Provider (Reads your Render/Grafana Cloud Envs automatically)
     resource = Resource.create({"service.name": settings.APP.otel_service_name})
@@ -74,6 +81,7 @@ def configure_logging() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.TimeStamper(fmt="iso", utc=True),
+            serialize_for_otel,  # Convert UUIDs and other non-serializable types
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,  # Key bridge step
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
