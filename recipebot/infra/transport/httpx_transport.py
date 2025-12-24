@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 from http import HTTPStatus
-from logging import getLogger
 from typing import Any
 
+import structlog
 from httpx import AsyncClient, HTTPStatusError, Request, Response
 from pydantic import AnyHttpUrl
 
@@ -19,7 +19,7 @@ from recipebot.infra.transport.schemas import (
     ResponseContent,
 )
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class HttpxHTTPTransport(AbstractAsyncHTTPTransport):

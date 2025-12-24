@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, PicklePersistence
 from telegram.ext._application import Application
 
 from recipebot.config import settings
-from recipebot.config.logging.logging import configure_logging
+from recipebot.config.logging import configure_logging
 from recipebot.drivers.handlers import add_handlers
 from recipebot.drivers.lifespan import on_shutdown, on_startup
 from recipebot.drivers.metrics_server import start_metrics_server
