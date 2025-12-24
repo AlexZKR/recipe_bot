@@ -32,7 +32,7 @@ class HttpxTTResolver(TTResolverABC):
                 raise InvalidTikTokURL(f"Invalid URL format: {url}")
 
             # Check if it's a TikTok domain
-            if not re.match(r"(?:www\.)?tiktok\.com|vm\.tiktok\.com", parsed.netloc):
+            if not re.match(r"(?:www\.|vm\.|vt\.)?tiktok\.com", parsed.netloc):
                 raise InvalidTikTokURL(f"Not a TikTok URL: {url}")
 
         except Exception as e:
