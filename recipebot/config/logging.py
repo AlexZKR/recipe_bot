@@ -1,56 +1,93 @@
 import logging
+import sys
 
 import orjson
 import structlog
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.sdk.resources import Resource
 
 from recipebot.config import settings
 
 
 def configure_logging() -> None:
-    """Configure logging with JSON format by default for external systems.
+    # 1. Setup OTel Provider (Reads your Render/Grafana Cloud Envs automatically)
+    resource = Resource.create({"service.name": settings.APP.otel_service_name})
+    logger_provider = LoggerProvider(resource=resource)
+    set_logger_provider(logger_provider)
 
-    JSON logging is enabled by default for production monitoring.
-    Set json_logging: false in config for human-readable text logs.
-    """
+    # Add OTel Exporter (Background batching for performance)
+    exporter = OTLPLogExporter(
+        endpoint=settings.APP.otel_exporter_otlp_endpoint,
+        headers={
+            "Authorization": settings.APP.otel_exporter_otlp_headers.get_secret_value(),
+        },
+    )
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 
-    shared_processors = [
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso", utc=True),
-    ]
-    processors = []
-    logger_factory: (
-        structlog.BytesLoggerFactory | structlog.WriteLoggerFactory | None
-    ) = None
-
+    # 2. Define the Structlog Renderer based on your Config
     if settings.APP.json_logging:
-        processors = shared_processors + [
-            structlog.processors.dict_tracebacks,
-            # seriialize non-string dict keys to JSON (user_data uses ENUMS as dict keys)
-            structlog.processors.JSONRenderer(
-                serializer=lambda obj, **kwargs: orjson.dumps(
-                    obj, option=orjson.OPT_NON_STR_KEYS
-                )
-            ),
-        ]
-        logger_factory = structlog.BytesLoggerFactory()
+        # Convenience: specialized JSON rendering for non-string keys
+        renderer = structlog.processors.JSONRenderer(
+            serializer=lambda obj, **kwargs: orjson.dumps(
+                obj, option=orjson.OPT_NON_STR_KEYS
+            )
+        )
     else:
-        processors = shared_processors + [
-            structlog.dev.ConsoleRenderer(),
-        ]
-        logger_factory = structlog.WriteLoggerFactory()
+        # Convenience: Colorful, pretty console logs for local dev
+        renderer = structlog.dev.ConsoleRenderer()
 
-    structlog.configure(
-        cache_logger_on_first_use=True,
-        wrapper_class=structlog.make_filtering_bound_logger(settings.APP.logging_level),
-        processors=processors,  # type: ignore[arg-type]
-        logger_factory=logger_factory,
+    # 3. Use ProcessorFormatter to bridge Structlog convenience to Stdlib
+    formatter = structlog.stdlib.ProcessorFormatter(
+        foreign_pre_chain=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+        ],
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            renderer,
+        ],
     )
 
-    # Configure third-party loggers
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-    logging.getLogger("asyncio").setLevel(logging.INFO)
-    logging.getLogger("telegram").setLevel(logging.INFO)
-    logging.getLogger("groq._base_client").setLevel(logging.WARNING)
+    # 4. Standard Library Handlers
+    # Handler A: Stdout (The one you see in Render/Terminal console)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setFormatter(formatter)
+
+    # Handler B: OTel (The one that ships to Grafana Cloud)
+    otel_handler = LoggingHandler(logger_provider=logger_provider)
+
+    # 5. Root Logger Configuration
+    root_logger = logging.getLogger()
+    root_logger.addHandler(stdout_handler)
+    root_logger.addHandler(otel_handler)
+    root_logger.setLevel(settings.APP.logging_level)
+
+    # 6. Structlog Configuration
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.StackInfoRenderer(),
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,  # Key bridge step
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+    # Third-party logger silencing
+    for logger_name in [
+        "httpx",
+        "urllib3",
+        "httpcore",
+        "groq._base_client",
+        "telegram",
+        "asyncio",
+    ]:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)

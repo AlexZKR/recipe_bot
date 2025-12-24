@@ -64,6 +64,12 @@ class AppSettings(BaseSettings):
     metrics_user: str = "metrics_user"
     metrics_pass: SecretStr = SecretStr("metrics_pass")
 
+    otel_exporter_otlp_endpoint: str = (
+        "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/logs"
+    )
+    otel_exporter_otlp_headers: SecretStr = SecretStr("Secret-Key")
+    otel_service_name: str = "recipe_bot_prod"
+
     testers_list: str = ""
     logging_level: str = "INFO"
     json_logging: bool = True

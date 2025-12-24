@@ -9,6 +9,8 @@ pre-commit
 structlog
 rich
 orjson
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
 
 asyncpg-stubs
 types-beautifulsoup4
