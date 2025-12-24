@@ -1,5 +1,4 @@
-from logging import getLogger
-
+import structlog
 from telegram.ext._application import Application
 
 from recipebot.adapters.repositories.sql.auth.user_repo.user_repo import UserAsyncpgRepo
@@ -12,7 +11,7 @@ from recipebot.config import settings
 from recipebot.drivers.state import container
 from recipebot.infra.groq.client import GroqClient
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 async def on_startup(app: Application):

@@ -1,5 +1,4 @@
-from logging import getLogger
-
+import structlog
 from telegram import User as TGUser
 
 from recipebot.adapters.repositories.sql.auth.user_repo.queries import (
@@ -14,7 +13,7 @@ from recipebot.domain.auth.user import User
 from recipebot.ports.repositories.exceptions import UserAlreadyExists, UserNotFound
 from recipebot.ports.repositories.user_repository import UserRepositoryABC
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class UserAsyncpgRepo(UserRepositoryABC):

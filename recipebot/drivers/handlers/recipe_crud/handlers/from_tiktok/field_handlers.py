@@ -1,4 +1,3 @@
-from typing import TYPE_CHECKING
 
 from telegram import (
     InlineKeyboardButton,
@@ -46,9 +45,6 @@ from recipebot.ports.services.tt_resolver.exceptions import (
     TikTokNotAccessible,
 )
 from recipebot.tasks.recipe_from_tt.recipe_from_tt import RecipeFromTTTask
-
-if TYPE_CHECKING:
-    pass
 
 
 async def handle_tiktok_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

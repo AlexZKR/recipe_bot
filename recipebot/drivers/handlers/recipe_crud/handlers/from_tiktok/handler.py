@@ -1,3 +1,5 @@
+from warnings import filterwarnings
+
 from telegram import Update
 from telegram.ext import (
     CallbackQueryHandler,
@@ -7,6 +9,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram.warnings import PTBUserWarning
 
 from recipebot.drivers.handlers.auth.decorators import only_registered
 from recipebot.drivers.handlers.basic_fallback import (
@@ -31,6 +34,10 @@ from recipebot.drivers.handlers.recipe_crud.handlers.from_tiktok.field_handlers 
 )
 from recipebot.drivers.handlers.recipe_crud.shared_tag_callbacks import (
     global_tag_callback_handler,
+)
+
+filterwarnings(
+    action="ignore", message=r".*CallbackQueryHandler.*", category=PTBUserWarning
 )
 
 

@@ -1,12 +1,12 @@
 import urllib.parse
-from logging import getLogger
 
+import structlog
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from recipebot.config.enums import AppEnvironment
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class TelegramBotSettings(BaseSettings):

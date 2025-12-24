@@ -1,5 +1,4 @@
-from logging import getLogger
-
+import structlog
 from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
@@ -10,7 +9,7 @@ from recipebot.drivers.handlers.main_keyboard import MAIN_KEYBOARD
 from recipebot.drivers.state import get_state
 from recipebot.ports.repositories.exceptions import RepositoryException
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
