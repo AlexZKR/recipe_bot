@@ -6,5 +6,10 @@ pytest-cov
 pytest-asyncio
 pre-commit
 
+structlog
+rich
+orjson
+
 asyncpg-stubs
 types-beautifulsoup4
+types-orjson
