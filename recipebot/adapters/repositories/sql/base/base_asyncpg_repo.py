@@ -1,8 +1,8 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from logging import getLogger
 
 import asyncpg
+import structlog
 from asyncpg.pool import PoolConnectionProxy
 
 from recipebot.adapters.repositories.sql.base.queries import (
@@ -15,7 +15,7 @@ from recipebot.adapters.repositories.sql.base.queries import (
 from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.config import settings
 
-logger = getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class AsyncpgConnection:
