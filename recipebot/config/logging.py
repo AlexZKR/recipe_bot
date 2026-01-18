@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Any, cast
 
 import orjson
 import structlog
@@ -8,11 +9,12 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
+from structlog.types import EventDict, Processor
 
 from recipebot.config import settings
 
 
-def serialize_for_otel(_, __, event_dict):
+def serialize_for_otel(_: str, __: str, event_dict: EventDict) -> dict[str, Any]:
     """Sanitizes the event_dict for OTel using orjson."""
     return orjson.loads(
         orjson.dumps(event_dict, default=str, option=orjson.OPT_NON_STR_KEYS)
@@ -35,16 +37,22 @@ def configure_logging() -> None:
     logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 
     # 2. Define the Structlog Renderer based on your Config
+    renderer: Processor
     if settings.APP.json_logging:
         # Convenience: specialized JSON rendering for non-string keys
-        renderer = structlog.processors.JSONRenderer(
-            serializer=lambda obj, **kwargs: orjson.dumps(
-                obj, option=orjson.OPT_NON_STR_KEYS
-            )
+        renderer = cast(
+            Processor,
+            structlog.processors.JSONRenderer(
+                serializer=lambda obj, **kwargs: orjson.dumps(
+                    obj,
+                    default=str,
+                    option=orjson.OPT_NON_STR_KEYS,
+                )
+            ),
         )
     else:
         # Convenience: Colorful, pretty console logs for local dev
-        renderer = structlog.dev.ConsoleRenderer()
+        renderer = cast(Processor, structlog.dev.ConsoleRenderer())
 
     # 3. Use ProcessorFormatter to bridge Structlog convenience to Stdlib
     formatter = structlog.stdlib.ProcessorFormatter(
