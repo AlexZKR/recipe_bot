@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'recipe_category') THEN
-        CREATE TYPE recipe_category AS ENUM ('BREAKFAST', 'LUNCH', 'DINNER', 'DESERT', 'COCKTAIL');
+        CREATE TYPE recipe_category AS ENUM ('BREAKFAST', 'MAIN_COURSE', 'SALAD', 'SOUP', 'SNACK', 'DESSERT', 'DRINK', 'SAUCE');
     END IF;
 END$$;
 

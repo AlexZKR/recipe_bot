@@ -6,11 +6,14 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 
 
 class RecipeCategory(StrEnum):
-    BREAKFAST = "BREAKFAST"
-    LUNCH = "LUNCH"
-    DINNER = "DINNER"
-    DESERT = "DESERT"
-    COCKTAIL = "COCKTAIL"
+    BREAKFAST = "BREAKFAST"  # Covers breakfast and brunch
+    MAIN_COURSE = "MAIN_COURSE"  # The united Lunch/Dinner category
+    SALAD = "SALAD"  # Salads (could be sides or mains)
+    SOUP = "SOUP"  # Soups, stews, and broths
+    SNACK = "SNACK"  # Appetizers, finger foods, small bites
+    DESSERT = "DESSERT"  # Fixed spelling (Sweets, cakes, cookies)
+    DRINK = "DRINK"  # Broader than COCKTAIL (includes smoothies, coffee, etc.)
+    SAUCE = "SAUCE"  # Sauces, dressings, marinades, dips
 
 
 class RecipeTag(BaseModel):
