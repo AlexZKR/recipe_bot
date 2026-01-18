@@ -14,7 +14,7 @@ from recipebot.infra.groq.client import GroqClient
 logger = structlog.get_logger(__name__)
 
 
-async def on_startup(app: Application):
+async def on_startup(app: Application) -> None:
     logger.info("Bot startup: initializing DB connection pool")
     asyncpg_conn = AsyncpgConnection()
     await asyncpg_conn.init_pool()
@@ -35,8 +35,8 @@ async def on_startup(app: Application):
     container["groq_client"] = groq_client
 
 
-async def on_shutdown(app: Application):
+async def on_shutdown(app: Application) -> None:
     logger.info("Bot shutdown: closing DB connection pool")
-    asyncpg_conn: AsyncpgConnection | None = container["asyncpg_conn"]
+    asyncpg_conn: AsyncpgConnection | None = container.get("asyncpg_conn")
     if asyncpg_conn:
         await asyncpg_conn.close_pool()

@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import asyncpg
 import structlog
@@ -16,6 +17,9 @@ from recipebot.adapters.repositories.sql.base.utils import load_query
 from recipebot.config import settings
 
 logger = structlog.get_logger(__name__)
+
+
+MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 
 
 class AsyncpgConnection:
@@ -75,3 +79,38 @@ class AsyncpgConnection:
 
             await conn.execute(load_query(__file__, CREATE_RECIPES_TABLE))
             await conn.execute(load_query(__file__, CREATE_RECIPE_TAGS_TABLE))
+
+            await self._ensure_migrations_table(conn)
+            await self._run_migrations(conn)
+
+    async def _ensure_migrations_table(self, conn: PoolConnectionProxy) -> None:
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                filename TEXT PRIMARY KEY,
+                    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            """
+        )
+
+    async def _run_migrations(self, conn: PoolConnectionProxy) -> None:
+        if not MIGRATIONS_DIR.exists():
+            return
+
+        sql_files = sorted(
+            f for f in MIGRATIONS_DIR.iterdir() if f.suffix == ".sql" and f.is_file()
+        )
+
+        for sql_file in sql_files:
+            filename = sql_file.name
+            already_applied = await conn.fetchval(
+                "SELECT 1 FROM schema_migrations WHERE filename = $1;",
+                filename,
+            )
+            if already_applied:
+                continue
+
+            await conn.execute(sql_file.read_text())
+            await conn.execute(
+                "INSERT INTO schema_migrations (filename) VALUES ($1);", filename
+            )
